@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<fmiModelDescription fmiVersion="2.0" modelName="ThermalPlantComposition.Valve" guid="{ec0b3af8-046d-5fd0-ba67-25436942871e}" generationTool="pyfmi_interfaces tooling" generationDateAndTime="2000-01-01T00:00:00Z" variableNamingConvention="structured">
+  <CoSimulation modelIdentifier="Valve" />
+  <ModelVariables>
+    <ScalarVariable name="limit" valueReference="0" causality="parameter" variability="fixed">
+      <Real start="1" />
+    </ScalarVariable>
+    <ScalarVariable name="command.open" valueReference="1" causality="input">
+      <Real start="0" />
+    </ScalarVariable>
+    <ScalarVariable name="position" valueReference="2" causality="output">
+      <Real />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure>
+    <Outputs>
+      <Unknown index="3" />
+    </Outputs>
+    <InitialUnknowns>
+      <Unknown index="3" />
+    </InitialUnknowns>
+  </ModelStructure>
+</fmiModelDescription>

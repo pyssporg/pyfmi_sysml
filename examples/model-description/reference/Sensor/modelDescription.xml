@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<fmiModelDescription fmiVersion="2.0" modelName="ThermalPlantComposition.Sensor" guid="{d1756b72-635c-5c69-8305-18e2297b93b6}" generationTool="pyfmi_interfaces tooling" generationDateAndTime="2000-01-01T00:00:00Z" variableNamingConvention="structured">
+  <CoSimulation modelIdentifier="Sensor" />
+  <ModelVariables>
+    <ScalarVariable name="gain" valueReference="0" causality="parameter" variability="fixed">
+      <Real start="1" />
+    </ScalarVariable>
+    <ScalarVariable name="offset" valueReference="1" causality="parameter" variability="fixed">
+      <Real start="0" />
+    </ScalarVariable>
+    <ScalarVariable name="raw" valueReference="2" causality="input">
+      <Real start="0" />
+    </ScalarVariable>
+    <ScalarVariable name="measured" valueReference="3" causality="output">
+      <Real />
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure>
+    <Outputs>
+      <Unknown index="4" />
+    </Outputs>
+    <InitialUnknowns>
+      <Unknown index="4" />
+    </InitialUnknowns>
+  </ModelStructure>
+</fmiModelDescription>

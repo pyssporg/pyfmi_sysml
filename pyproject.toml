@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyfmi-sysml"
+dynamic = ["version"]
+description = "SysML ingestion and source-taking commands for the pyfmi_interfaces FMI generators."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [
+  { name = "pyssp contributors" }
+]
+dependencies = [
+  "pycps-sysml2>=0.3.0",
+  "pyfmi-interfaces>=0.5.1",
+  "pyfmi-interop>=0.5.0",
+  "pyssp-sysml-definitions>=0.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "fmpy",
+  "pytest",
+  "ruff",
+]
+
+[project.scripts]
+pyfmi-sysml = "pyfmi_sysml.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = { attr = "pyfmi_sysml.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["pyfmi_sysml*"]
+
+[tool.ruff]
+# Lint selection is explicit so a ruff upgrade cannot change the gate.
+lint.select = ["E4", "E7", "E9", "F"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "tests"]
+markers = [
+  "static: inspects source or files without executing the package",
+  "unit: one object's behaviour, no generated artifact",
+  "component: a generated artifact is the unit under test",
+  "contract: two directions must agree (round-trip, sync)",
+  "system: the CLI is driven end to end",
+  "cpp: requires a working C++ toolchain and CMake",
+  "sysml: exercises SysML ingestion, the only path in this package",
+  "slow: not part of the default CI subset",
+]

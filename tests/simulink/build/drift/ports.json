@@ -1,0 +1,38 @@
+{
+  "Scale": {
+    "parameters": [
+      {
+        "name": "gain",
+        "type": "Real",
+        "unbound": false,
+        "value": "2"
+      }
+    ],
+    "ports": [
+      {
+        "bus": "Signal",
+        "direction": "in",
+        "fields": [
+          {
+            "name": "value",
+            "type": "Real",
+            "value": "0"
+          }
+        ],
+        "name": "command"
+      },
+      {
+        "bus": "Signal",
+        "direction": "out",
+        "fields": [
+          {
+            "name": "value",
+            "type": "Real",
+            "value": null
+          }
+        ],
+        "name": "y"
+      }
+    ]
+  }
+}
