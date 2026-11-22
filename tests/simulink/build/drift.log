@@ -1,6 +1,0 @@
-{Error using check_interface>check_ports
-port 1: model 'u', manifest 'command'
-
-Error in check_interface (line 34)
-check_ports('Inport', 'in', ports, model);
-} 
