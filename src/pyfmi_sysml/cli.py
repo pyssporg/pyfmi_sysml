@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 from collections.abc import Sequence
 from datetime import datetime, timezone
+from pathlib import Path
 
 from pyfmi_interfaces.core.cli import Command, run
 from pyfmi_interfaces.core.identity import GENERATION_TIME_FORMAT
@@ -21,6 +22,7 @@ from pyfmi_sysml.generate import (
     generate_model_description,
     generate_modelica,
 )
+from pyssp_sysml_definitions import core_definitions
 
 #: Where the generators write when no ``-o/--output`` is given.
 DEFAULT_OUTPUT = "build"
@@ -103,11 +105,43 @@ def _add_generation_time(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _add_includes(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--include",
+        dest="includes",
+        metavar="PATH",
+        type=Path,
+        action="append",
+        default=[],
+        help=(
+            "Extra SysML package root (file or directory) to merge into the "
+            "load; repeatable."
+        ),
+    )
+    parser.add_argument(
+        "--core-definitions",
+        action="store_true",
+        help=(
+            "Append pyssp_sysml_definitions.core_definitions() after every "
+            "--include root, so a model can import PysspCore."
+        ),
+    )
+
+
+def _includes(args: argparse.Namespace) -> list[Path]:
+    """The include roots in resolution order: repeated flags, then the sugar."""
+    roots = list(args.includes)
+    if args.core_definitions:
+        roots.append(core_definitions())
+    return roots
+
+
 def _configure_model_description(parser: argparse.ArgumentParser) -> None:
     _add_source(parser)
     _add_output(parser, "Output directory (default: build).")
     _add_composition(parser)
     _add_base_index(parser)
+    _add_includes(parser)
     parser.add_argument(
         "--component",
         metavar="NAME",
@@ -125,6 +159,7 @@ def _configure_headers(parser: argparse.ArgumentParser) -> None:
     _add_output(parser, "Output directory (default: build).")
     _add_composition(parser)
     _add_base_index(parser)
+    _add_includes(parser)
     parser.add_argument("--component", metavar="NAME", help=_COMPONENT_HELP)
     parser.add_argument("--prefix", metavar="NAME", help=_PREFIX_HELP)
 
@@ -147,6 +182,7 @@ def _configure_modelica(parser: argparse.ArgumentParser) -> None:
     _add_source(parser)
     _add_output(parser, "Output directory (default: build).")
     _add_composition(parser)
+    _add_includes(parser)
     parser.add_argument(
         "--package",
         metavar="NAME",
@@ -168,6 +204,7 @@ def _run_model_description(args: argparse.Namespace) -> int:
         component=args.component,
         generation_time=args.generation_time,
         base_index=args.base_index,
+        includes=_includes(args),
     )
     _print_paths(written)
     return 0
@@ -181,6 +218,7 @@ def _run_headers(args: argparse.Namespace) -> int:
         component=args.component,
         prefix=args.prefix,
         base_index=args.base_index,
+        includes=_includes(args),
     )
     _print_paths(written)
     return 0
@@ -195,6 +233,7 @@ def _run_runtime(args: argparse.Namespace) -> int:
         prefix=args.prefix,
         base_index=args.base_index,
         omit=args.omit,
+        includes=_includes(args),
     )
     _print_paths(written)
     return 0
@@ -207,6 +246,7 @@ def _run_modelica(args: argparse.Namespace) -> int:
         package=args.package,
         within=args.within,
         composition=args.composition,
+        includes=_includes(args),
     )
     _print_paths(written)
     return 0

@@ -18,7 +18,7 @@ from pathlib import Path
 
 from _pipeline import build_unit, fmu_unit_names
 
-from pyfmi_sysml import load_architecture
+from pyfmi_sysml import architecture
 from pyssp_sysml_definitions import core_definitions
 
 EXAMPLE_DIR = Path(__file__).resolve().parent
@@ -49,8 +49,8 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     out_root = args.out / args.serialization
 
-    architecture = load_architecture(DEFAULT_SYSML, includes=[core_definitions()])
-    units = fmu_unit_names(architecture)
+    loaded = architecture(DEFAULT_SYSML, includes=[core_definitions()])
+    units = fmu_unit_names(loaded)
     if not units:
         print(
             f"error: no :> FmuInterop units found in {DEFAULT_SYSML}",
@@ -60,7 +60,7 @@ def main(argv: list[str] | None = None) -> int:
 
     for unit in units:
         _, _, fmu_path = build_unit(
-            architecture,
+            loaded,
             unit,
             out_root / unit,
             serialization=args.serialization,

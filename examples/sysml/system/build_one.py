@@ -17,7 +17,7 @@ from pathlib import Path
 
 from _pipeline import build_unit, fmu_unit_names
 
-from pyfmi_sysml import load_architecture
+from pyfmi_sysml import architecture
 from pyssp_sysml_definitions import core_definitions
 
 EXAMPLE_DIR = Path(__file__).resolve().parent
@@ -53,8 +53,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
 
-    architecture = load_architecture(DEFAULT_SYSML, includes=[core_definitions()])
-    units = fmu_unit_names(architecture)
+    loaded = architecture(DEFAULT_SYSML, includes=[core_definitions()])
+    units = fmu_unit_names(loaded)
 
     unit = args.unit or (units[0] if units else None)
     if unit is None or unit not in units:
@@ -63,7 +63,7 @@ def main(argv: list[str] | None = None) -> int:
 
     out_dir = args.out / args.serialization
     _, model_dir, fmu_path = build_unit(
-        architecture,
+        loaded,
         unit,
         out_dir,
         serialization=args.serialization,

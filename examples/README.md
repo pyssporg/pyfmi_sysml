@@ -38,9 +38,12 @@ signal — are defined once in `pyssp_sysml_definitions/docs/roles.md`. These
 examples state only where each role lands in this repository's FMI and Modelica
 artifacts.
 
-The `pyfmi-sysml` CLI has no `--include` option, so the scripts call the public
-`pyfmi_sysml` wrappers and pass `core_definitions()` explicitly: the vocabulary
-is a real load root, not a name match.
+The scripts use the first-class surface: the generator wrappers take
+`includes=[core_definitions()]` for a source, `to_reduction(...)` passes the
+same roots when one parse feeds two artifacts, and the multi-unit example loads
+with `architecture(..., includes=...)`. The `pyfmi-sysml` CLI has the
+equivalent repeatable `--include PATH` plus `--core-definitions` sugar, which
+appends `pyssp_sysml_definitions.core_definitions()` after the explicit roots.
 
 ## What the library does not do
 

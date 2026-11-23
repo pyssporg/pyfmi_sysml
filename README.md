@@ -35,9 +35,13 @@ python3 -m venv venv
 - `modelica` — write the Modelica interface package
 
 Each accepts a `.sysml` file or a directory of them, `--composition`,
-`-o/--output` (default `build/`), and the per-artifact flags it had before the
-ownership move (`--component`, `--prefix`, `--omit`, `--package`, `--within`,
-`--generation-time`, `--base-index`).
+`--include PATH` (repeatable package root, appended in flag order), and
+`-o/--output` (default `build/`). `--core-definitions` is sugar for one root:
+it appends `pyssp_sysml_definitions.core_definitions()` after every `--include`.
+Per command: `model-description` adds `--component`, `--generation-time`, and
+`--base-index`; `c-headers` adds `--component`, `--prefix`, and `--base-index`;
+`c-runtime` adds those plus `--omit`; `modelica` adds `--package` and
+`--within`.
 
 ```text
 usage: pyfmi-sysml [-h] COMMAND ...
@@ -55,7 +59,9 @@ The same public reduction names are available: `to_reduction`, `components`,
 `component`, `component_interface`, `fmu_units`, `resolve_system`,
 `export_identity`, `direction_causality`, and `architecture`. The four
 source-taking wrappers mirror the emitter names and accept a source, an
-architecture, or an existing `Reduction`.
+architecture, or an existing `Reduction`; a path source also accepts
+`includes=[...]` package roots, which `architecture` and `to_reduction` take
+too.
 
 The interop adapter path parses once and never reloads the source:
 

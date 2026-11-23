@@ -27,7 +27,7 @@ from pyssp_sysml_definitions import core_definitions
 from pyfmi_sysml import (
     generate_c_runtime,
     generate_model_description,
-    load_architecture,
+    to_reduction,
 )
 
 EXAMPLE_DIR = Path(__file__).resolve().parent
@@ -52,11 +52,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    architecture = load_architecture(DEFAULT_SYSML, includes=[core_definitions()])
+    reduction = to_reduction(DEFAULT_SYSML, includes=[core_definitions()])
     [description] = generate_model_description(
-        architecture, args.out, generation_time=GENERATION_TIME
+        reduction, args.out, generation_time=GENERATION_TIME
     )
-    generate_c_runtime(architecture, args.out)
+    generate_c_runtime(reduction, args.out)
 
     shutil.copyfile(EXAMPLE_DIR / MODEL, args.out / MODEL)
     _compile(args.out)

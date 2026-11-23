@@ -24,6 +24,7 @@ direction out of the signal declaration.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from functools import cache
 from os import PathLike
 from typing import TYPE_CHECKING
@@ -68,13 +69,34 @@ def _container_kinds() -> frozenset[object]:
     )
 
 
-def architecture(source: Architecture | str | PathLike[str]) -> Architecture:
-    """An already loaded architecture, or the one at ``source``."""
+def architecture(
+    source: Architecture | str | PathLike[str],
+    *,
+    includes: Iterable[str | PathLike[str]] = (),
+) -> Architecture:
+    """An already loaded architecture, or the one at ``source``.
+
+    ``includes`` are extra package roots (files or directories) merged into the
+    load, so a model can import a library that defines its FMU base or the
+    exported leaf itself.  They apply only when ``source`` must be loaded: an
+    already loaded architecture is returned unchanged and a non-empty
+    ``includes`` is refused rather than silently dropped.  The bundled
+    ``PyfmiInterop`` library joins the roots only when the architecture imports
+    it, the same policy as :func:`pyfmi_sysml.load_architecture`.
+    """
     from pycps_sysml2 import Architecture, load
 
+    from pyfmi_sysml.definitions import load_with_interop
+
+    roots = tuple(includes)
     if isinstance(source, Architecture):
+        if roots:
+            raise ValueError(
+                "includes apply only when loading a source; the given "
+                "architecture is already loaded"
+            )
         return source
-    return load(source)
+    return load_with_interop(source, load, includes=roots)
 
 
 def _start_text(type_name: str, value: object | None) -> str | None:
@@ -492,6 +514,7 @@ def to_reduction(
     *,
     composition: str | None = None,
     base_index: int = 0,
+    includes: Iterable[str | PathLike[str]] = (),
 ) -> Reduction:
     """Reduce an architecture, or return the ``Reduction`` already given.
 
@@ -500,12 +523,16 @@ def to_reduction(
     caller that already holds a :class:`Reduction` runs the generators without
     ``pycps_sysml2`` being imported.
 
-    A ``Reduction`` has already fixed ``composition`` and ``base_index``;
-    passing a non-default value for either is refused rather than silently
-    ignored.
+    ``includes`` are extra package roots merged into the load when ``source`` is
+    a path; the root is loaded exactly once.  An already loaded architecture or
+    reduction is not re-resolved, so ``includes`` is refused there.
+
+    A ``Reduction`` has already fixed ``composition`` and ``base_index``, and an
+    architecture is already loaded with its includes; passing those arguments
+    again is refused rather than silently ignored.
     """
     if isinstance(source, Reduction):
-        if composition is not None or base_index != 0:
+        if composition is not None or base_index != 0 or tuple(includes):
             raise ValueError(
                 "A Reduction already fixes composition and base_index; "
                 "reduce the architecture with those arguments instead"
@@ -515,7 +542,7 @@ def to_reduction(
     from pycps_sysml2 import effective_members
     from pycps_sysml2.parameters import SSP_POLICY, validate_parameter_dialect
 
-    parsed = architecture(source)
+    parsed = architecture(source, includes=includes)
     system = resolve_system(parsed, composition)
     identity = export_identity(parsed, system)
     validate_parameter_dialect(parsed, system, policy=SSP_POLICY)

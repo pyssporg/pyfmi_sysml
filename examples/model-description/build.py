@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Sequence
 
 from pyssp_sysml_definitions import core_definitions
-from pyfmi_sysml import generate_model_description, load_architecture
+from pyfmi_sysml import generate_model_description
 
 EXAMPLE_DIR = Path(__file__).resolve().parent
 DEFAULT_SYSML = EXAMPLE_DIR / "thermal_plant.sysml"
@@ -36,9 +36,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    architecture = load_architecture(DEFAULT_SYSML, includes=[core_definitions()])
     written = generate_model_description(
-        architecture, args.out, generation_time=GENERATION_TIME
+        DEFAULT_SYSML,
+        args.out,
+        generation_time=GENERATION_TIME,
+        includes=[core_definitions()],
     )
     for path in written:
         print(path)

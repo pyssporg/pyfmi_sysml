@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Sequence
 
 from pyssp_sysml_definitions import core_definitions
-from pyfmi_sysml import generate_modelica, load_architecture
+from pyfmi_sysml import generate_modelica
 
 EXAMPLE_DIR = Path(__file__).resolve().parent
 DEFAULT_SYSML = EXAMPLE_DIR / "minimal.sysml"
@@ -36,8 +36,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    architecture = load_architecture(DEFAULT_SYSML, includes=[core_definitions()])
-    written = generate_modelica(architecture, args.out)
+    written = generate_modelica(
+        DEFAULT_SYSML, args.out, includes=[core_definitions()]
+    )
     model = args.out / PACKAGE / "Scale.mo"
     shutil.copyfile(EXAMPLE_DIR / "Scale.mo", model)
     for path in written:

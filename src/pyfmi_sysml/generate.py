@@ -9,7 +9,7 @@ and forward the result to the matching emitter.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from datetime import datetime
 from os import PathLike
 from pathlib import Path
@@ -38,10 +38,20 @@ def generate_model_description(
     component: str | None = None,
     generation_time: datetime | None = None,
     base_index: int = 0,
+    includes: Iterable[str | PathLike[str]] = (),
 ) -> list[Path]:
-    """Write ``modelDescription.xml`` per component from a SysML source."""
+    """Write ``modelDescription.xml`` per component from a SysML source.
+
+    ``includes`` are extra package roots merged into the one load a path
+    source needs; see :func:`pyfmi_sysml.reduction.to_reduction`.
+    """
     return _generate_model_description(
-        to_reduction(source, composition=composition, base_index=base_index),
+        to_reduction(
+            source,
+            composition=composition,
+            base_index=base_index,
+            includes=includes,
+        ),
         output_dir,
         component=component,
         generation_time=generation_time,
@@ -56,10 +66,20 @@ def generate_c_headers(
     component: str | None = None,
     prefix: str | None = None,
     base_index: int = 0,
+    includes: Iterable[str | PathLike[str]] = (),
 ) -> list[Path]:
-    """Write the C interface headers from a SysML source."""
+    """Write the C interface headers from a SysML source.
+
+    ``includes`` are extra package roots merged into the one load a path
+    source needs; see :func:`pyfmi_sysml.reduction.to_reduction`.
+    """
     return _generate_c_headers(
-        to_reduction(source, composition=composition, base_index=base_index),
+        to_reduction(
+            source,
+            composition=composition,
+            base_index=base_index,
+            includes=includes,
+        ),
         output_dir,
         component=component,
         prefix=prefix,
@@ -75,10 +95,20 @@ def generate_c_runtime(
     prefix: str | None = None,
     base_index: int = 0,
     omit: Sequence[str] | str = (),
+    includes: Iterable[str | PathLike[str]] = (),
 ) -> list[Path]:
-    """Write the C headers and the C++17 FMI runtime from a SysML source."""
+    """Write the C headers and the C++17 FMI runtime from a SysML source.
+
+    ``includes`` are extra package roots merged into the one load a path
+    source needs; see :func:`pyfmi_sysml.reduction.to_reduction`.
+    """
     return _generate_c_runtime(
-        to_reduction(source, composition=composition, base_index=base_index),
+        to_reduction(
+            source,
+            composition=composition,
+            base_index=base_index,
+            includes=includes,
+        ),
         output_dir,
         component=component,
         prefix=prefix,
@@ -93,10 +123,15 @@ def generate_modelica(
     composition: str | None = None,
     package: str = DEFAULT_PACKAGE,
     within: str | None = None,
+    includes: Iterable[str | PathLike[str]] = (),
 ) -> list[Path]:
-    """Write the Modelica interface package from a SysML source."""
+    """Write the Modelica interface package from a SysML source.
+
+    ``includes`` are extra package roots merged into the one load a path
+    source needs; see :func:`pyfmi_sysml.reduction.to_reduction`.
+    """
     return _generate_modelica(
-        to_reduction(source, composition=composition),
+        to_reduction(source, composition=composition, includes=includes),
         output_dir,
         package=package,
         within=within,
