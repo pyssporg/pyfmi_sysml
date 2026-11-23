@@ -6,9 +6,10 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import pycps_sysml2
 import pytest
 
-from conftest import GOLDEN_ROOT, fixture_path
+from conftest import GOLDEN_ROOT, load_fixture
 from golden_utils import assert_golden_text
 from pyfmi_sysml import generate_modelica
 
@@ -129,9 +130,7 @@ def _texts(root: Path) -> dict[str, str]:
 
 
 def _generate(subject: str, output_dir: Path, **kwargs: object) -> list[Path]:
-    return generate_modelica(
-        fixture_path(subject, f"{subject}.sysml"), output_dir, **kwargs
-    )
+    return generate_modelica(load_fixture(subject), output_dir, **kwargs)
 
 
 @pytest.mark.parametrize("subject", SUBJECTS)
@@ -295,9 +294,6 @@ def test_a_parameter_keeps_its_authored_value_and_an_unbound_one_stays_open(
   private import ScalarValues::*;
   private import PysspCore::*;
 
-  port def ParameterInterface;
-  attribute def ParameterSet;
-
   port def Signal {
     attribute value : Real;
   }
@@ -321,7 +317,10 @@ def test_a_parameter_keeps_its_authored_value_and_an_unbound_one_stays_open(
         encoding="utf-8",
     )
 
-    generate_modelica(architecture, tmp_path / "out")
+    generate_modelica(
+        pycps_sysml2.load(architecture, pycps_sysml2.core_definitions()),
+        tmp_path / "out",
+    )
     text = (
         tmp_path / "out" / "GeneratedInterfaces" / "Device_Interface.mo"
     ).read_text(encoding="utf-8")
@@ -359,8 +358,6 @@ def test_string_and_array_fields_reach_the_connector(tmp_path: Path) -> None:
     architecture = tmp_path / "probe.sysml"
     architecture.write_text(
         """package Probe {
-  port def ParameterInterface;
-
   port def Text {
     attribute label : String;
     attribute samples : Real[3];

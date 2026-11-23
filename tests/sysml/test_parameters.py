@@ -17,6 +17,7 @@ import xml.etree.ElementTree as ET
 
 import pytest
 from conftest import compile_runner, free_udp_port, skip_reason
+from pyssp_sysml_definitions import core_definitions
 
 from pyfmi_interop import wire
 from pyfmi_interop.builder import build_model
@@ -280,7 +281,9 @@ def generated(request, tmp_path_factory):
     source.write_text(_FIXTURE, encoding="utf-8")
     config = BuildConfig(serialization="packed", role="adapter")
     if layer == "psysml2":
-        parsed = sysml.parse(source, name="ParameterExchange")
+        parsed = sysml.parse(
+            source, includes=[core_definitions()], name="ParameterExchange"
+        )
         model_dir = sysml.generate_adapter(parsed, root / "model", config)
     else:
         model = sysml.load_model(source, name="ParameterExchange")

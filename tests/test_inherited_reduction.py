@@ -19,9 +19,10 @@ from pyfmi_sysml import components
 pytestmark = pytest.mark.unit
 
 INHERITED_MODEL = """package Inherited {
-  attribute def Tag;
+  private import ScalarValues::*;
+  private import PysspCore::*;
 
-  port def ParameterInterface;
+  attribute def Tag;
 
   port def BaseParameters :> ParameterInterface {
     attribute alpha : Real = 1.0;
@@ -66,7 +67,9 @@ def _write_model(directory: Path, text: str) -> Path:
 
 def test_derived_part_exposes_inherited_and_own_members(tmp_path: Path) -> None:
     """The derived component carries the inherited port before its own port."""
-    architecture = pycps_sysml2.load(_write_model(tmp_path, INHERITED_MODEL))
+    architecture = pycps_sysml2.load(
+        _write_model(tmp_path, INHERITED_MODEL), pycps_sysml2.core_definitions()
+    )
 
     [component] = components(architecture)
 
@@ -82,7 +85,9 @@ def test_derived_part_exposes_inherited_and_own_members(tmp_path: Path) -> None:
 
 def test_inherited_members_keep_ancestor_first_order(tmp_path: Path) -> None:
     """Attributes and ports list the supertype members first, then the own ones."""
-    architecture = pycps_sysml2.load(_write_model(tmp_path, INHERITED_MODEL))
+    architecture = pycps_sysml2.load(
+        _write_model(tmp_path, INHERITED_MODEL), pycps_sysml2.core_definitions()
+    )
 
     view = effective_members(architecture, architecture.get_part_def("Derived"))
 
@@ -94,7 +99,9 @@ def test_derived_port_definition_expands_inherited_attributes(
     tmp_path: Path,
 ) -> None:
     """``RichSignal :> Signal`` emits ``value`` then ``extra`` for one port."""
-    architecture = pycps_sysml2.load(_write_model(tmp_path, INHERITED_MODEL))
+    architecture = pycps_sysml2.load(
+        _write_model(tmp_path, INHERITED_MODEL), pycps_sysml2.core_definitions()
+    )
 
     [component] = components(architecture)
 

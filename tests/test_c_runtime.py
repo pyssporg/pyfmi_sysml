@@ -50,9 +50,6 @@ TYPED_ARCHITECTURE = """package Typed {
   private import ScalarValues::*;
   private import PysspCore::*;
 
-  port def ParameterInterface;
-  attribute def ParameterSet;
-
   port def TypedParameters :> ParameterInterface {
     attribute gain : Real = 1.5;
     attribute label : String = "start";

@@ -11,6 +11,7 @@ from __future__ import annotations
 import builtins
 from pathlib import Path
 
+import pycps_sysml2
 import pytest
 
 from conftest import GENERATION_TIME, fixture_path
@@ -109,8 +110,6 @@ ATTR_MODEL = """package Reduced {
   private import ScalarValues::*;
   private import PysspCore::*;
 
-  port def ParameterInterface;
-  attribute def ParameterSet;
   attribute def Tag;
 
   port def Parameters :> ParameterInterface {
@@ -219,3 +218,38 @@ def test_reduction_keeps_composition_root_attributes(tmp_path: Path) -> None:
     assert reduction.root == "Root"
     assert reduction.attributes == (("rate_hz", 50.0), ("period_s", 0.02))
 
+
+MISNAMED_PARAMETERS_MODEL = """package Misnamed {
+  private import ScalarValues::*;
+  private import PysspCore::*;
+
+  port def GainParameters :> ParameterInterface {
+    attribute gain : Real = 1.0;
+  }
+
+  port def Signal {
+    attribute value : Real;
+  }
+
+  part def Leaf {
+    in port gains : GainParameters;
+    in port u : Signal;
+  }
+
+  part def Root {
+    part leaf : Leaf;
+  }
+}
+"""
+
+
+def test_parameter_interface_port_must_use_the_reserved_name(
+    tmp_path: Path,
+) -> None:
+    """The vocabulary reserves ``parameters``; another name drops the values."""
+    source = tmp_path / "misnamed.sysml"
+    source.write_text(MISNAMED_PARAMETERS_MODEL, encoding="utf-8")
+    architecture = pycps_sysml2.load(source, pycps_sysml2.core_definitions())
+
+    with pytest.raises(ValueError, match="must be named 'parameters'"):
+        to_reduction(architecture)

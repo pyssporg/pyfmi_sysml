@@ -4,10 +4,6 @@
 package Bus {
   private import ScalarValues::*;
   private import PysspCore::*;
-
-  port def ParameterInterface;
-  attribute def ParameterSet;
-
   port def Actuation {
     attribute channel_a : Real;
     attribute channel_b : Real;

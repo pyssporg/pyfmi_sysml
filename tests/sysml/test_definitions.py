@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from conftest import fixture_path
 from pyfmi_sysml import interop_definitions
 
 pytestmark = pytest.mark.sysml
@@ -116,3 +117,37 @@ def test_an_include_root_can_make_the_import_visible() -> None:
         ("model.sysml", ("lib",)),
         ("model.sysml", ("lib", interop_definitions())),
     ]
+
+
+FIXTURE_SUBJECTS = (
+    "applied",
+    "bus",
+    "controller",
+    "generator",
+    "minimal",
+    "packages",
+    "sensor",
+)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("subject", FIXTURE_SUBJECTS)
+def test_fixtures_include_the_shipped_core_instead_of_redeclaring_it(
+    subject: str,
+) -> None:
+    """One copy of the vocabulary: every fixture imports the package roots."""
+    pycps = pytest.importorskip("pycps_sysml2")
+
+    includes = (
+        [fixture_path("packages", "support")] if subject == "packages" else []
+    )
+    architecture = pycps.load(
+        fixture_path(subject, f"{subject}.sysml"),
+        *includes,
+        pycps.core_definitions(),
+    )
+
+    assert "ParameterInterface" not in architecture.port_definitions
+    assert "ParameterSet" not in architecture.attribute_definitions
+    assert "FmuModel" not in architecture.part_definitions
+    assert "FmuMetadata" not in architecture.attribute_definitions

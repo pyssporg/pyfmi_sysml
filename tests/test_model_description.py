@@ -17,7 +17,7 @@ import pytest
 from pyssp_standard.standard.fmi2.codec import Fmi2ModelDescriptionXmlCodec
 from pyssp_standard.standard.fmi2.validation import Fmi2ModelDescriptionValidator
 
-from conftest import GENERATION_TIME, GOLDEN_ROOT, fixture_path
+from conftest import GENERATION_TIME, GOLDEN_ROOT, load_fixture
 from golden_utils import assert_golden_text
 from pyfmi_interfaces.core.identity import component_guid, format_generation_time
 from pyfmi_interfaces.model_description.document import (
@@ -87,8 +87,8 @@ PAIR_MODEL = """package Pair {
 
 #: A typed parameter port: a Boolean and an Integer default besides a Real.
 TYPED_MODEL = """package Typed {
-  port def ParameterInterface;
-  attribute def ParameterSet;
+  private import ScalarValues::*;
+  private import PysspCore::*;
 
   port def Signal {
     attribute value : Real;
@@ -115,6 +115,8 @@ TYPED_MODEL = """package Typed {
 #: An experiment container that is a plain ``DefaultExperiment`` without
 #: ``stepSize``; the FMI attribute must then be absent.
 STEPLESS_MODEL = """package Stepless {
+  private import PysspCore::*;
+
   attribute def Defaults :> DefaultExperiment {
     attribute startTime : Real = 0.0;
     attribute stopTime : Real = 2.0;
@@ -129,10 +131,12 @@ STEPLESS_MODEL = """package Stepless {
 """
 
 
-#: An experiment container declaring the optional ``tolerance``; the FMI
-#: attribute must carry it.
+#: The FMI superset ``Experiment`` declaring ``stepSize`` and ``tolerance``;
+#: both FMI attributes must carry them.
 TOLERANT_MODEL = """package Tolerant {
-  attribute def Defaults :> DefaultExperiment {
+  private import PysspCore::*;
+
+  attribute def Defaults :> Experiment {
     attribute startTime : Real = 0.0;
     attribute stopTime : Real = 2.0;
     attribute stepSize : Real = 0.1;
@@ -209,9 +213,16 @@ def _write_model(directory: Path, text: str) -> Path:
     return path
 
 
+def _load_model(directory: Path, text: str):
+    """Load an inline model with the shipped core vocabulary as a root."""
+    return pycps_sysml2.load(
+        _write_model(directory, text), pycps_sysml2.core_definitions()
+    )
+
+
 def _generate(subject: str, output_dir: Path, **kwargs) -> list[Path]:
     return generate_model_description(
-        fixture_path(subject, f"{subject}.sysml"),
+        load_fixture(subject),
         output_dir,
         generation_time=GENERATION_TIME,
         **kwargs,
@@ -248,10 +259,10 @@ def test_same_generation_time_is_byte_identical(
 def test_default_generation_time_is_the_fixed_epoch(tmp_path: Path) -> None:
     """No injected clock: a default build is byte-identical across runs."""
     first = generate_model_description(
-        fixture_path("sensor", "sensor.sysml"), tmp_path / "first"
+        load_fixture("sensor"), tmp_path / "first"
     )
     second = generate_model_description(
-        fixture_path("sensor", "sensor.sysml"), tmp_path / "second"
+        load_fixture("sensor"), tmp_path / "second"
     )
 
     assert [path.read_bytes() for path in first] == [
@@ -267,7 +278,7 @@ def test_another_generation_time_changes_only_the_timestamp(
     earlier = _read(_generate("sensor", tmp_path / "earlier")[0])
     later = _read(
         generate_model_description(
-            fixture_path("sensor", "sensor.sysml"),
+            load_fixture("sensor"),
             tmp_path / "later",
             generation_time=GENERATION_TIME + timedelta(hours=1),
         )[0]
@@ -324,9 +335,7 @@ def test_direct_fmu_model_identity_is_the_bare_name(tmp_path: Path) -> None:
 
 def test_controller_variable_summary_is_exact() -> None:
     """Names, value references, causalities, variabilities, starts, and types."""
-    architecture = pycps_sysml2.load(
-        fixture_path("controller", "controller.sysml")
-    )
+    architecture = load_fixture("controller")
 
     document = model_description_document(
         to_reduction(architecture),
@@ -366,7 +375,7 @@ def test_controller_variable_summary_is_exact() -> None:
 def test_boolean_start_is_fmi_text(tmp_path: Path) -> None:
     """``Boolean`` starts are ``true``/``false``, never ``str(True)``."""
     [path] = generate_model_description(
-        _write_model(tmp_path, TYPED_MODEL),
+        _load_model(tmp_path, TYPED_MODEL),
         tmp_path / "out",
         generation_time=GENERATION_TIME,
     )
@@ -386,7 +395,7 @@ def test_interface_default_wins_over_an_applied_parameter_set(
 ) -> None:
     """The reduction reads parameter defaults from the interface only."""
     [path] = generate_model_description(
-        fixture_path("applied", "applied.sysml"),
+        load_fixture("applied"),
         tmp_path / "out",
         generation_time=GENERATION_TIME,
     )
@@ -402,7 +411,7 @@ def test_interface_default_wins_over_an_applied_parameter_set(
 def test_base_index_one_renames_array_variables(tmp_path: Path) -> None:
     """``base_index=1`` shifts ``[0]``/``[1]`` to ``[1]``/``[2]`` in the XML."""
     [path] = generate_model_description(
-        fixture_path("controller", "controller.sysml"),
+        load_fixture("controller"),
         tmp_path / "out",
         generation_time=GENERATION_TIME,
         base_index=1,
@@ -461,7 +470,7 @@ def test_default_experiment_comes_from_the_experiment_container(
 ) -> None:
     """The typed container maps its three fields onto the FMI element."""
     [path] = generate_model_description(
-        fixture_path("applied", "applied.sysml"),
+        load_fixture("applied"),
         tmp_path / "out",
         generation_time=GENERATION_TIME,
     )
@@ -483,7 +492,7 @@ def test_step_size_is_omitted_when_the_container_declares_none(
 ) -> None:
     """A plain ``DefaultExperiment`` may omit ``stepSize``; so does the XML."""
     [path] = generate_model_description(
-        _write_model(tmp_path, STEPLESS_MODEL),
+        _load_model(tmp_path, STEPLESS_MODEL),
         tmp_path / "out",
         generation_time=GENERATION_TIME,
     )
@@ -503,7 +512,7 @@ def test_tolerance_comes_from_the_experiment_container(
 ) -> None:
     """An authored ``tolerance`` is emitted and the file still validates."""
     [path] = generate_model_description(
-        _write_model(tmp_path, TOLERANT_MODEL),
+        _load_model(tmp_path, TOLERANT_MODEL),
         tmp_path / "out",
         generation_time=GENERATION_TIME,
     )
@@ -523,7 +532,7 @@ def test_tolerance_is_omitted_when_the_container_declares_none(
 ) -> None:
     """No authored ``tolerance`` means no attribute, not a default."""
     [path] = generate_model_description(
-        fixture_path("applied", "applied.sysml"),
+        load_fixture("applied"),
         tmp_path / "out",
         generation_time=GENERATION_TIME,
     )
@@ -558,7 +567,7 @@ def test_retired_control_tags_are_refused(tmp_path: Path) -> None:
 def test_naive_generation_time_is_refused(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="timezone-aware"):
         generate_model_description(
-            fixture_path("minimal", "minimal.sysml"),
+            load_fixture("minimal"),
             tmp_path,
             generation_time=datetime(2026, 1, 1),
         )
@@ -588,9 +597,7 @@ def test_component_filter_selects_one_and_refuses_an_unknown(tmp_path: Path) -> 
 
 
 def test_document_round_trips_through_the_codec() -> None:
-    architecture = pycps_sysml2.load(
-        fixture_path("applied", "applied.sysml")
-    )
+    architecture = load_fixture("applied")
     reduction = to_reduction(architecture)
     component = components(architecture)[0]
 

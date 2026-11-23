@@ -42,6 +42,16 @@ def fixture_path(subject: str, name: str) -> Path:
     return FIXTURE_ROOT / subject / name
 
 
+def load_fixture(subject: str, *includes: Path):
+    """Load a fixture with the shipped ``PysspCore`` root every model imports."""
+    import pycps_sysml2
+    from pyssp_sysml_definitions import core_definitions
+
+    return pycps_sysml2.load(
+        fixture_path(subject, f"{subject}.sysml"), core_definitions(), *includes
+    )
+
+
 @pytest.fixture(name="generation_time")
 def generation_time_fixture() -> datetime:
     return GENERATION_TIME

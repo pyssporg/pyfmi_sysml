@@ -4,10 +4,6 @@
 package Controller {
   private import ScalarValues::*;
   private import PysspCore::*;
-
-  port def ParameterInterface;
-  attribute def ParameterSet;
-
   port def Command {
     attribute manual : Real;
     attribute auto : Real;

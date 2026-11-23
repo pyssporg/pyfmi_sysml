@@ -7,6 +7,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from pyssp_sysml_definitions import core_definitions
 
 from pyfmi_interop import ir
 
@@ -262,8 +263,8 @@ def test_single_parse_then_adapter_generation_never_reloads(tmp_path, monkeypatc
     source.write_text(
         "package Single {\n"
         "  private import ScalarValues::*;\n"
+        "  private import PysspCore::*;\n"
         "  port def Signal { attribute value : Real; }\n"
-        "  part def FmuModel { }\n"
         "  part def FmuInterop :> FmuModel { }\n"
         "  part def Only :> FmuInterop { out port y : Signal; }\n"
         "}\n",
@@ -278,7 +279,9 @@ def test_single_parse_then_adapter_generation_never_reloads(tmp_path, monkeypatc
         return real_load(*args, **kwargs)
 
     monkeypatch.setattr(pycps_sysml2, "load", counted)
-    parsed = sysml.parse(source, name="OnlyModel", realtime=False)
+    parsed = sysml.parse(
+        source, includes=[core_definitions()], name="OnlyModel", realtime=False
+    )
     assert calls["count"] == 1
 
     def failing(*args, **kwargs):
@@ -303,12 +306,10 @@ def test_includes_merge_a_library_defined_fmu(tmp_path):
     library.write_text(
         "package ChainLibrary {\n"
         "  private import ScalarValues::*;\n"
+        "  private import PysspCore::*;\n"
         "\n"
         "  port def Signal {\n"
         "    attribute value : Real;\n"
-        "  }\n"
-        "\n"
-        "  part def FmuModel {\n"
         "  }\n"
         "\n"
         "  part def FmuInterop :> FmuModel {\n"
@@ -329,7 +330,7 @@ def test_includes_merge_a_library_defined_fmu(tmp_path):
         encoding="utf-8",
     )
 
-    model = sysml.load_model(app, includes=[library])
+    model = sysml.load_model(app, includes=[library, core_definitions()])
 
     assert model.interface == "Leaf"
     assert {signal.name for signal in model.signals} == {"command", "status"}

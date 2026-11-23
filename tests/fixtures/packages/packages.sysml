@@ -4,10 +4,6 @@ package Packages {
   private import ScalarValues::*;
   private import PysspCore::*;
   private import Support::*;
-
-  port def ParameterInterface;
-  attribute def ParameterSet;
-
   port def PackagesSignal {
     attribute value : Real;
   }

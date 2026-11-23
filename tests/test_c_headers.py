@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from pycps_sysml2 import core_definitions, load
 
-from conftest import GOLDEN_ROOT, GENERATION_TIME, fixture_path, update_goldens
+from conftest import GOLDEN_ROOT, GENERATION_TIME, load_fixture, update_goldens
 from golden_utils import assert_golden_text
 from pyfmi_interfaces.c.headers import (
     common_header_name,
@@ -84,12 +84,13 @@ _GUID_MACRO = re.compile(
 )
 
 
-def _source(subject: str) -> Path:
-    return fixture_path(subject, f"{subject}.sysml")
+def _loaded(subject: str):
+    """The fixture architecture, loaded against the shipped core vocabulary."""
+    return load_fixture(subject)
 
 
 def _generated(subject: str, directory: Path) -> list[Path]:
-    return generate_c_headers(_source(subject), directory)
+    return generate_c_headers(_loaded(subject), directory)
 
 
 def _text(path: Path) -> str:
@@ -127,7 +128,7 @@ def _guid_macro(text: str) -> tuple[str, str]:
 def _model_description_guid(subject: str, directory: Path) -> str:
     """The ``guid`` attribute of the subject's generated modelDescription."""
     [path] = generate_model_description(
-        _source(subject), directory, generation_time=GENERATION_TIME
+        _loaded(subject), directory, generation_time=GENERATION_TIME
     )
     guid = ET.parse(path).getroot().get("guid")
     assert guid is not None
@@ -139,7 +140,7 @@ def test_headers_match_golden(subject: str, tmp_path: Path) -> None:
     written = _generated(subject, tmp_path)
     names = [path.name for path in written]
 
-    assert names[0] == common_header_name(load(_source(subject)).package_name)
+    assert names[0] == common_header_name(_loaded(subject).package_name)
     assert names[1:] == sorted(names[1:])
 
     golden = sorted(path.name for path in (GOLDEN / subject).glob("*.h"))
@@ -152,7 +153,7 @@ def test_headers_match_golden(subject: str, tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("subject", SUBJECTS)
 def test_text_builders_match_written_files(subject: str, tmp_path: Path) -> None:
-    architecture = load(_source(subject))
+    architecture = _loaded(subject)
     package = architecture.package_name
     system = resolve_system(architecture)
     direct = export_identity(architecture, system).direct
@@ -179,7 +180,7 @@ def test_header_boundaries(subject: str, tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("subject", SUBJECTS)
 def test_vr_enum_matches_component_variables(subject: str, tmp_path: Path) -> None:
-    architecture = load(_source(subject))
+    architecture = _loaded(subject)
     package = architecture.package_name
     written = _generated(subject, tmp_path)
     texts = {path.name: _text(path) for path in written}
@@ -204,7 +205,7 @@ def test_vr_enum_matches_component_variables(subject: str, tmp_path: Path) -> No
 
 @pytest.mark.parametrize("subject", SUBJECTS)
 def test_writability_follows_causality(subject: str, tmp_path: Path) -> None:
-    architecture = load(_source(subject))
+    architecture = _loaded(subject)
     package = architecture.package_name
     written = _generated(subject, tmp_path)
     texts = {path.name: _text(path) for path in written}
@@ -243,7 +244,7 @@ def test_guid_macro_matches_model_description(
     subject: str, tmp_path: Path
 ) -> None:
     """The header guid is the guid the modelDescription writes for the component."""
-    architecture = load(_source(subject))
+    architecture = _loaded(subject)
     package = architecture.package_name
     system = resolve_system(architecture)
     direct = export_identity(architecture, system).direct
@@ -264,7 +265,7 @@ def test_guid_macro_matches_model_description(
 def test_common_header_is_c_valid(subject: str, tmp_path: Path) -> None:
     written = _generated(subject, tmp_path)
     common = _text(written[0])
-    package = load(_source(subject)).package_name
+    package = _loaded(subject).package_name
 
     cpp_at = common.find("#ifdef __cplusplus")
     assert cpp_at == -1 or cpp_at > common.index(f"{package}_VrMapping")
@@ -322,7 +323,7 @@ def test_headers_compile(subject: str, tmp_path: Path) -> None:
 
     written = _generated(subject, tmp_path)
     names = [path.name for path in written]
-    architecture = load(_source(subject))
+    architecture = _loaded(subject)
     package = architecture.package_name
     items = components(architecture)
     direct = export_identity(architecture, resolve_system(architecture)).direct
@@ -363,7 +364,7 @@ def test_headers_compile(subject: str, tmp_path: Path) -> None:
 
 def test_prefix_overrides_file_and_type_names(tmp_path: Path) -> None:
     written = generate_c_headers(
-        _source("minimal"), tmp_path, prefix="Custom"
+        _loaded("minimal"), tmp_path, prefix="Custom"
     )
 
     assert [path.name for path in written] == [
@@ -377,7 +378,7 @@ def test_prefix_overrides_file_and_type_names(tmp_path: Path) -> None:
 
 def test_guid_macro_follows_the_prefix_override(tmp_path: Path) -> None:
     """``prefix`` changes the macro stem, never the guid itself."""
-    written = generate_c_headers(_source("minimal"), tmp_path, prefix="Custom")
+    written = generate_c_headers(_loaded("minimal"), tmp_path, prefix="Custom")
     component = _text(written[1])
 
     macro, guid = _guid_macro(component)
@@ -390,7 +391,7 @@ def test_guid_macro_follows_the_prefix_override(tmp_path: Path) -> None:
 
 def test_composition_selects_the_exported_root(tmp_path: Path) -> None:
     written = generate_c_headers(
-        _source("controller"), tmp_path, composition="ControllerComposition"
+        _loaded("controller"), tmp_path, composition="ControllerComposition"
     )
     assert [path.name for path in written] == [
         "Controller_InterfaceCommon.h",
@@ -400,7 +401,7 @@ def test_composition_selects_the_exported_root(tmp_path: Path) -> None:
 
 def test_direct_fmu_model_is_the_export_unit(tmp_path: Path) -> None:
     """A marked definition needs no container root; it exports itself."""
-    architecture = load(_source("generator"))
+    architecture = _loaded("generator")
 
     system = resolve_system(architecture)
     exported = components(architecture)
@@ -418,7 +419,7 @@ def test_direct_fmu_model_is_the_export_unit(tmp_path: Path) -> None:
 
 def test_direct_fmu_model_header_is_not_doubled(tmp_path: Path) -> None:
     """The package name is not repeated in the direct component header."""
-    [common, component] = generate_c_headers(_source("generator"), tmp_path)
+    [common, component] = generate_c_headers(_loaded("generator"), tmp_path)
     text = _text(component)
 
     assert common.name == "Generator_InterfaceCommon.h"
@@ -432,7 +433,7 @@ def test_direct_fmu_model_header_is_not_doubled(tmp_path: Path) -> None:
 
 def test_guid_macro_direct_fmu_has_no_container_level(tmp_path: Path) -> None:
     """A direct FMU guid key is ``pyssp_sysml2/<definition>``, like the XML."""
-    [common, component] = generate_c_headers(_source("generator"), tmp_path)
+    [common, component] = generate_c_headers(_loaded("generator"), tmp_path)
     text = _text(component)
 
     macro, guid = _guid_macro(text)
@@ -447,7 +448,7 @@ def test_guid_macro_composition_nested_uses_the_system_scope(
     tmp_path: Path,
 ) -> None:
     """A container root scopes the guid key by its system name, like the XML."""
-    [common, component] = generate_c_headers(_source("controller"), tmp_path)
+    [common, component] = generate_c_headers(_loaded("controller"), tmp_path)
     text = _text(component)
 
     macro, guid = _guid_macro(text)
@@ -489,8 +490,6 @@ def test_shared_fmu_base_is_not_an_export_candidate(tmp_path: Path) -> None:
     architecture = tmp_path / "shared_base.sysml"
     architecture.write_text(
         """package Shared {
-  part def FmuModel;
-
   part def FmuInterop :> FmuModel;
 
   port def Signal {
@@ -505,7 +504,7 @@ def test_shared_fmu_base_is_not_an_export_candidate(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    loaded = load(architecture)
+    loaded = load(architecture, core_definitions())
     system = resolve_system(loaded)
 
     assert system.name == "Leaf"
@@ -521,8 +520,6 @@ def test_included_fmu_definition_is_an_export_candidate(tmp_path: Path) -> None:
     library = tmp_path / "library.sysml"
     library.write_text(
         """package Library {
-  part def FmuModel;
-
   part def FmuInterop :> FmuModel;
 
   port def Signal {
@@ -545,7 +542,7 @@ def test_included_fmu_definition_is_an_export_candidate(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    loaded = load(architecture, library)
+    loaded = load(architecture, library, core_definitions())
     system = resolve_system(loaded)
 
     assert system.name == "Leaf"
@@ -560,8 +557,6 @@ def test_sibling_leaves_of_a_shared_base_still_need_a_name(
     architecture = tmp_path / "shared_pair.sysml"
     architecture.write_text(
         """package SharedPair {
-  part def FmuModel;
-
   part def FmuInterop :> FmuModel;
 
   port def Signal {
@@ -581,7 +576,7 @@ def test_sibling_leaves_of_a_shared_base_still_need_a_name(
     )
 
     with pytest.raises(ValueError, match="Cannot pick a composition root") as found:
-        components(load(architecture))
+        components(load(architecture, core_definitions()))
 
     message = str(found.value)
     assert "2 FmuModel candidates" in message
@@ -597,8 +592,6 @@ def test_fmu_units_lists_sibling_leaves_and_skips_shared_base(
     architecture = tmp_path / "units.sysml"
     architecture.write_text(
         """package Units {
-  part def FmuModel;
-
   part def FmuInterop :> FmuModel;
 
   port def Signal {
@@ -617,7 +610,7 @@ def test_fmu_units_lists_sibling_leaves_and_skips_shared_base(
         encoding="utf-8",
     )
 
-    loaded = load(architecture)
+    loaded = load(architecture, core_definitions())
     units = fmu_units(loaded)
 
     assert [unit.name for unit in units] == ["Alpha", "Zulu"]
@@ -631,8 +624,6 @@ def test_fmu_units_returns_a_direct_fmu_definition(tmp_path: Path) -> None:
     architecture = tmp_path / "direct.sysml"
     architecture.write_text(
         """package Direct {
-  part def FmuModel;
-
   port def Signal {
     attribute value : Real;
   }
@@ -645,7 +636,7 @@ def test_fmu_units_returns_a_direct_fmu_definition(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    units = fmu_units(load(architecture))
+    units = fmu_units(load(architecture, core_definitions()))
 
     assert [unit.name for unit in units] == ["Only"]
 
@@ -677,8 +668,6 @@ def test_several_fmu_models_require_a_name(tmp_path: Path) -> None:
     architecture = tmp_path / "pair.sysml"
     architecture.write_text(
         """package Pair {
-  part def FmuModel;
-
   port def Signal {
     attribute value : Real;
   }
@@ -696,7 +685,7 @@ def test_several_fmu_models_require_a_name(tmp_path: Path) -> None:
     )
 
     with pytest.raises(ValueError, match="Cannot pick a composition root") as found:
-        components(load(architecture))
+        components(load(architecture, core_definitions()))
 
     message = str(found.value)
     assert "2 FmuModel candidates" in message
@@ -705,9 +694,9 @@ def test_several_fmu_models_require_a_name(tmp_path: Path) -> None:
 
 
 def test_accepts_an_architecture_object(tmp_path: Path) -> None:
-    architecture = load(_source("bus"))
+    architecture = _loaded("bus")
     from_object = generate_c_headers(architecture, tmp_path / "object")
-    from_path = generate_c_headers(_source("bus"), tmp_path / "path")
+    from_path = generate_c_headers(_loaded("bus"), tmp_path / "path")
 
     assert [path.name for path in from_object] == [path.name for path in from_path]
     for left, right in zip(from_object, from_path):
@@ -724,7 +713,7 @@ def test_member_expression_escapes_keywords() -> None:
 def test_base_index_one_shifts_names_not_storage(tmp_path: Path) -> None:
     """``base_index=1`` renames FMI elements; the C array stays zero-based."""
     written = generate_c_headers(
-        _source("controller"),
+        _loaded("controller"),
         tmp_path,
         base_index=1,
     )

@@ -16,7 +16,7 @@ package Applied {
     attribute gains : Real[2] = (9.0, 9.5);
   }
 
-  attribute def PlantDefaults :> DefaultExperiment {
+  attribute def PlantDefaults :> Experiment {
     attribute startTime : Real = 0.0;
     attribute stopTime : Real = 10.0;
     attribute stepSize : Real = 0.1;

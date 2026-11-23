@@ -14,6 +14,7 @@ from pathlib import Path
 from zipfile import ZipFile
 
 import pytest
+from pyssp_sysml_definitions import core_definitions
 
 from pyfmi_interop import Direction, package_fmu
 from pyfmi_interop.core import BuildConfig
@@ -32,12 +33,10 @@ _EXAMPLE = (
 _CHAIN_LIBRARY = """\
 package ChainLibrary {
   private import ScalarValues::*;
+  private import PysspCore::*;
 
   port def Signal {
     attribute value : Real;
-  }
-
-  part def FmuModel {
   }
 
   part def FmuInterop :> FmuModel {
@@ -162,7 +161,9 @@ def test_library_defined_fmu_loads_and_generates_from_includes(tmp_path):
     import pyfmi_sysml as sysml
 
     app, library = _write_chain(tmp_path)
-    parsed = sysml.parse(app, includes=[library], realtime=False)
+    parsed = sysml.parse(
+        app, includes=[library, core_definitions()], realtime=False
+    )
     model = parsed.spec
 
     assert model.interface == "Leaf"
@@ -628,7 +629,11 @@ def test_authored_parameter_and_neutral_input_starts_survive_the_handoff(tmp_pat
     source.write_text(_FIXTURE, encoding="utf-8")
     config = BuildConfig(serialization="packed")
 
-    parsed = parse(source, name="ParameterExchange")
+    parsed = parse(
+        source,
+        includes=[core_definitions()],
+        name="ParameterExchange",
+    )
     spec = {signal.name: signal for signal in parsed.spec.signals}
     assert spec["transport"].initial == "loopback"
     assert spec["bind_address"].initial == "127.0.0.1:0"

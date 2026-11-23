@@ -4,15 +4,6 @@ package Generator {
   private import ScalarValues::*;
   private import PysspCore::*;
 
-  part def FmuModel;
-  attribute def FmuMetadata {
-    attribute source : String;
-    attribute implementation : String;
-  }
-
-  port def ParameterInterface;
-  attribute def ParameterSet;
-
   port def RealSignal {
     attribute value : Real;
   }

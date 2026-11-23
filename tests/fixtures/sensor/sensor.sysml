@@ -4,10 +4,6 @@
 package Sensor {
   private import ScalarValues::*;
   private import PysspCore::*;
-
-  port def ParameterInterface;
-  attribute def ParameterSet;
-
   port def Rate {
     attribute rate : Real;
   }
