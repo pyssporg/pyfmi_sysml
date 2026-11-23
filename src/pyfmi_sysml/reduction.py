@@ -82,12 +82,13 @@ def architecture(
     exported leaf itself.  They apply only when ``source`` must be loaded: an
     already loaded architecture is returned unchanged and a non-empty
     ``includes`` is refused rather than silently dropped.  The bundled
-    ``PyfmiInterop`` library joins the roots only when the architecture imports
-    it, the same policy as :func:`pyfmi_sysml.load_architecture`.
+    ``PysspCore`` and ``PyfmiInterop`` libraries join the roots only when the
+    architecture imports them, the same policy as
+    :func:`pyfmi_sysml.load_architecture`.
     """
     from pycps_sysml2 import Architecture, load
 
-    from pyfmi_sysml.definitions import load_with_interop
+    from pyfmi_sysml.definitions import load_with_definitions
 
     roots = tuple(includes)
     if isinstance(source, Architecture):
@@ -97,7 +98,7 @@ def architecture(
                 "architecture is already loaded"
             )
         return source
-    return load_with_interop(source, load, includes=roots)
+    return load_with_definitions(source, load, includes=roots)
 
 
 def _start_text(type_name: str, value: object | None) -> str | None:

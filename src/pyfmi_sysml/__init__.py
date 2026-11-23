@@ -10,7 +10,11 @@ in ``pyfmi_interop``.
 """
 
 from pyfmi_interop.core import adapter_from_reduction
-from pyfmi_sysml.definitions import interop_definitions, load_with_interop
+from pyfmi_sysml.definitions import (
+    interop_definitions,
+    load_with_definitions,
+    load_with_interop,
+)
 from pyfmi_sysml.generate import (
     generate_c_headers,
     generate_c_runtime,
@@ -63,6 +67,7 @@ __all__ = [
     "interop_definitions",
     "load_architecture",
     "load_model",
+    "load_with_definitions",
     "load_with_interop",
     "model_from_architecture",
     "model_from_sysml",

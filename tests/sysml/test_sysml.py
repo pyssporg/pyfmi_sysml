@@ -215,7 +215,10 @@ def test_parse_reduces_once_and_loads_the_source_once(
     monkeypatch.setattr(pycps_sysml2, "load", counting_load)
     monkeypatch.setattr(upstream, "to_reduction", counting_reduction)
 
-    parsed = sysml.parse(source)
+    # The composition adds a vocabulary root on a second load when the model
+    # imports it and the caller omitted it; supplying the root pins the
+    # single-load path this test asserts.
+    parsed = sysml.parse(source, includes=[core_definitions()])
 
     assert parsed.unit == "Exchange"
     assert len(loads) == 1

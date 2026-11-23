@@ -64,7 +64,7 @@ from pyfmi_interop.core import (
     unit_from_attributes,
 )
 from pyfmi_interop.core.ir import deterministic_guid
-from pyfmi_sysml.definitions import load_with_interop
+from pyfmi_sysml.definitions import load_with_definitions
 
 if TYPE_CHECKING:
     from pyfmi_interfaces.core import Reduction
@@ -131,15 +131,15 @@ def load_architecture(
 
     ``includes`` are extra package roots (files or directories) merged into the
     load, so a model can import a library that defines its FMU base or the
-    exported leaf itself.  The bundled ``PyfmiInterop`` library is added to the
-    roots only when the architecture imports it, exactly as in
-    :func:`load_model`.  Call this once to export several units from the same
-    parse, passing each name to :func:`model_from_architecture` as
-    ``composition=``.
+    exported leaf itself.  The bundled ``PysspCore`` and ``PyfmiInterop``
+    vocabularies are added to the roots only when the architecture imports them,
+    exactly as in :func:`load_model`.  Call this once to export several units
+    from the same parse, passing each name to
+    :func:`model_from_architecture` as ``composition=``.
     """
 
     pycps_sysml2, _ = _require_sysml()
-    return load_with_interop(source, pycps_sysml2.load, includes=includes)
+    return load_with_definitions(source, pycps_sysml2.load, includes=includes)
 
 
 def load_model(
