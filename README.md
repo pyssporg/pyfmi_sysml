@@ -9,11 +9,11 @@ package's emitters. It also owns the interop adapter flow: `parse` extracts
 attribute values from the reduction and maps them to a `ModelSpec`, and
 `generate_adapter` emits the adapter tree through interop's public writer.
 `load_with_interop` and the `PyfmiInterop` include policy live here, not in the
-vocabulary package. The FMI interface model and its emitters live in
-`pyfmi_interfaces`; the SysML-free generator, runtime, and packager live in
-`pyfmi_interop`; this package is the composition layer that owns the SysML
-reader and the source-taking command line. FMI packaging (`pyfmi package`) stays
-in `pyfmi_interfaces`.
+vocabulary package. The FMI interface model, its emitters, and `pyfmi package`
+live in `pyfmi_interfaces`; `pyfmi_interop` owns the protobuf `ModelSpec` and the
+adapter model on one versioned wire, and takes only its FMI facade from
+`pyfmi_interfaces`. This package is the composition layer that owns the SysML
+reader and the source-taking command line.
 
 ## Install
 
