@@ -63,6 +63,7 @@ def _container_kinds() -> frozenset[object]:
         {
             AttributeKind.FMU_METADATA,
             AttributeKind.SSP_METADATA,
+            AttributeKind.SOURCED_METADATA,  # family metadata: no FMI slot
             AttributeKind.PARAMETER_SET,
             AttributeKind.EXPERIMENT,
         }

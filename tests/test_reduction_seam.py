@@ -219,6 +219,41 @@ def test_reduction_keeps_composition_root_attributes(tmp_path: Path) -> None:
     assert reduction.attributes == (("rate_hz", 50.0), ("period_s", 0.02))
 
 
+FAMILY_METADATA_MODEL = """package FamilyMetadata {
+  private import ScalarValues::*;
+  private import PysspCore::*;
+  private import PyfmiInterop::*;
+
+  port def InteropSignal {
+    attribute value : Real;
+    attribute fmu_meta : FmuMetadata;
+    attribute ssp_meta : SspMetadata;
+    attribute interop_meta : InteropMetadata;
+  }
+
+  part def Leaf :> FmuInterop {
+    out port y : InteropSignal;
+  }
+}
+"""
+
+
+def test_family_metadata_is_never_a_signal_field(tmp_path: Path) -> None:
+    """Drift caught: a SourcedMetadata container emitted as an FMI signal."""
+    source = tmp_path / "family.sysml"
+    source.write_text(FAMILY_METADATA_MODEL, encoding="utf-8")
+
+    reduction = to_reduction(source)
+
+    [component] = reduction.components
+    [signal] = [port for port in component.ports if port.name == "y"]
+    assert [field.name for field in signal.fields] == ["value"]
+    assert "interop_meta" not in {variable.name for variable in component.variables}
+    assert "y.interop_meta" not in {
+        variable.name for variable in component.variables
+    }
+
+
 MISNAMED_PARAMETERS_MODEL = """package Misnamed {
   private import ScalarValues::*;
   private import PysspCore::*;
