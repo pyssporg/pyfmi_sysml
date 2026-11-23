@@ -5,9 +5,11 @@ SysML ingestion for the FMI interface generators. Contributors read `AGENTS.md`.
 `pyfmi_sysml` loads a SysML v2 architecture through
 [`pycps_sysml2`](https://github.com/pyssporg/pycps_sysml2), reduces it once to
 the parser-free `Reduction` defined by `pyfmi_interfaces`, and calls that
-package's emitters. It also owns the interop adapter flow: `parse` maps the
-reduction to a `ModelSpec`, and `generate_adapter` emits the adapter tree with
-`pyfmi_interop`'s core. The FMI interface model and its emitters live in
+package's emitters. It also owns the interop adapter flow: `parse` extracts
+attribute values from the reduction and maps them to a `ModelSpec`, and
+`generate_adapter` emits the adapter tree through interop's public writer.
+`load_with_interop` and the `PyfmiInterop` include policy live here, not in the
+vocabulary package. The FMI interface model and its emitters live in
 `pyfmi_interfaces`; the SysML-free generator, runtime, and packager live in
 `pyfmi_interop`; this package is the composition layer that owns the SysML
 reader and the source-taking command line. FMI packaging (`pyfmi package`) stays

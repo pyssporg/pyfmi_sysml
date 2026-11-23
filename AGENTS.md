@@ -33,8 +33,8 @@ over `pyfmi_interop`'s core.
   unit.
 - **One dialect owner.** SysML v2 is parsed by `pycps_sysml2.load`; never fork a
   parser, copy grammar, or import `sysmlpy` directly.
-- **No wire plane, no runtime.** Emit the adapter tree through
-  `pyfmi_interop.core.adapter`; do not add framing, transports, or scheduling
+- **No wire plane, no runtime.** Emit the adapter tree through the public
+  `pyfmi_interop.core` writer; do not add framing, transports, or scheduling
   here.
 - **No hand-rolled FMI XML.** FMI documents come from
   `pyfmi_interfaces`/`pyssp_standard`, never from a private writer.

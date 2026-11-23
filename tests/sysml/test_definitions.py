@@ -56,3 +56,63 @@ def test_interop_definitions_declares_the_shared_vocabulary():
     # fmu_meta stays inherited from FmuModel, not redeclared locally.
     assert "fmu_meta" not in model.attributes
 
+
+
+class _Architecture:
+    """The only part of a loaded architecture ``load_with_interop`` reads."""
+
+    def __init__(self, imports: dict[str, object]) -> None:
+        self.imports = imports
+
+
+@pytest.mark.unit
+def test_load_with_interop_skips_the_library_without_an_import() -> None:
+    from pyfmi_sysml import load_with_interop
+
+    calls: list[tuple[object, tuple[object, ...]]] = []
+
+    def load(source, *roots):
+        calls.append((source, roots))
+        return _Architecture({})
+
+    result = load_with_interop("model.sysml", load, includes=["lib"])
+
+    assert result.imports == {}
+    assert calls == [("model.sysml", ("lib",))]
+
+
+@pytest.mark.unit
+def test_load_with_interop_adds_the_library_when_imported() -> None:
+    from pyfmi_sysml import load_with_interop
+
+    calls: list[tuple[object, tuple[object, ...]]] = []
+
+    def load(source, *roots):
+        calls.append((source, roots))
+        return _Architecture({"PyfmiInterop": object()})
+
+    load_with_interop("model.sysml", load)
+
+    assert calls == [
+        ("model.sysml", ()),
+        ("model.sysml", (interop_definitions(),)),
+    ]
+
+
+@pytest.mark.unit
+def test_an_include_root_can_make_the_import_visible() -> None:
+    from pyfmi_sysml import load_with_interop
+
+    calls: list[tuple[object, tuple[object, ...]]] = []
+
+    def load(source, *roots):
+        calls.append((source, roots))
+        imports = {"PyfmiInterop": object()} if "lib" in roots else {}
+        return _Architecture(imports)
+
+    load_with_interop("model.sysml", load, includes=["lib"])
+
+    assert calls == [
+        ("model.sysml", ("lib",)),
+        ("model.sysml", ("lib", interop_definitions())),
+    ]

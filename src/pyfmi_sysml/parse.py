@@ -13,23 +13,12 @@ parser-free ``pyfmi_interfaces.core.Reduction``;
 :func:`pyfmi_sysml.generate_adapter` consumes that handle and never
 reloads the source.
 
-Timing attributes are read defensively from part and port definitions:
-
-``step_size_s`` / ``step_size``
-    Seconds per scheduler step.  The model step size, or a signal period when
-    authored on a component.
-``period_s``
-    Seconds.
-``period``
-    Seconds when the value is <= 1, otherwise Hz (``10`` means 10 Hz).
-``rate_hz`` / ``rate``
-    Hz.
-
-When several keys are present the order above wins.  A missing model step size
-defaults to 1 kHz (0.001 s) and is overridden by ``step_size_s=``.  The model
-step size is taken from the system, then a component, then a port; a signal
-takes its rate from the merged component/port attributes, so a port overrides
-its component.
+This module extracts plain attribute values from the reduction.  The spelling,
+precedence, period heuristic, default step, type and causality maps, string
+capacity, identifier rule and signal projection belong to
+:mod:`pyfmi_interop.core.attributes`; no timing or FMI mapping rule is duplicated
+here.  The system, component and port scopes are handed over as plain mappings,
+and interop decides their precedence.
 
 Timing and transport metadata are ordinary typed attributes.  On a port
 definition the attribute must be typed by a dialect container marker (for
@@ -52,15 +41,29 @@ output, and the upstream neutral start for an input.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from pyfmi_interop.core import ModelSpec, ir
+from pyfmi_interop.core import (
+    DEFAULT_STEP_SIZE_S,
+    DEFAULT_STRING_CAPACITY,
+    ModelSpec,
+    data_type_from_name,
+    direction_from_causality,
+    ir,
+    model_name,
+    period_seconds_from_attributes,
+    rate_hz_from_attributes,
+    sanitize_identifier,
+    select_component,
+    signal_from_values,
+    step_size_for_scopes,
+    step_size_from_attributes,
+    unit_from_attributes,
+)
 from pyfmi_interop.core.ir import deterministic_guid
-from pyfmi_interop.core.adapter import _select_component
 from pyfmi_sysml.definitions import load_with_interop
 
 if TYPE_CHECKING:
@@ -77,30 +80,7 @@ __all__ = [
     "parse",
 ]
 
-#: Scheduler step used when the architecture authors no timing attribute.
-DEFAULT_STEP_SIZE_S = 0.001
-
-#: Fixed storage reserved for a string signal's value.
-DEFAULT_STRING_CAPACITY = 256
-
 _SYSML_EXTRA = 'the pyfmi_sysml dependencies: pip install "pyfmi-sysml"'
-
-_FMI_TYPES = {
-    "real": ir.DataType.REAL,
-    "integer": ir.DataType.INTEGER,
-    "boolean": ir.DataType.BOOLEAN,
-    "string": ir.DataType.STRING,
-}
-
-_CAUSALITIES = {
-    "input": ir.Direction.INPUT,
-    "output": ir.Direction.OUTPUT,
-    "parameter": ir.Direction.PARAMETER,
-}
-
-_STEP_KEYS = ("step_size_s", "step_size")
-_PERIOD_KEYS = ("period_s", "period")
-_RATE_KEYS = ("rate_hz", "rate")
 
 
 @dataclass(frozen=True)
@@ -127,8 +107,7 @@ def parse(
     architecture = load_architecture(source, includes=includes)
     _, to_reduction = _require_sysml()
     reduction = to_reduction(architecture, composition=composition)
-    selected = list(reduction.components)
-    unit = _select_component(selected, component)
+    unit = select_component(reduction, component)
     spec = _project_spec(
         reduction,
         [unit],
@@ -229,13 +208,7 @@ def _require_sysml():
 
 
 def _model_name(reduction: Any, name: str | None) -> str:
-    if name is not None:
-        return name
-    if reduction.package:
-        return _identifier(reduction.package)
-    if reduction.root:
-        return _identifier(reduction.root)
-    return "model"
+    return model_name(reduction.package, reduction.root, name)
 
 
 def _port_attributes(component: Any) -> dict[str, Mapping[str, object]]:
@@ -278,60 +251,20 @@ def _attribute_value(attributes: Mapping[str, object], name: str) -> object | No
     return value
 
 
-def _text_attribute(attributes: Mapping[str, object], name: str) -> str | None:
-    value = _attribute_value(attributes, name)
-    return None if value is None else str(value)
+def _plain_attributes(attributes: Mapping[str, object]) -> dict[str, object]:
+    """Extract plain values; attribute semantics belong to ``pyfmi_interop``."""
 
-
-def _as_float(value: object, key: str) -> float:
-    if isinstance(value, bool):
-        raise ValueError(f"timing attribute {key!r} must be a number, got {value!r}")
-    try:
-        return float(value)  # type: ignore[arg-type]
-    except (TypeError, ValueError) as error:
-        raise ValueError(
-            f"timing attribute {key!r} must be a number, got {value!r}"
-        ) from error
-
-
-def _period_seconds(value: object, key: str) -> float:
-    number = _as_float(value, key)
-    if key == "period" and number > 1.0:
-        number = 1.0 / number
-    if number <= 0:
-        raise ValueError(f"timing attribute {key!r} must be > 0, got {number!r}")
-    return number
+    return {name: _attribute_value(attributes, name) for name in attributes}
 
 
 def _period_seconds_from_attributes(attributes: Mapping[str, object]) -> float | None:
-    for key in _STEP_KEYS:
-        value = _attribute_value(attributes, key)
-        if value is not None:
-            return _period_seconds(value, key)
-    for key in _PERIOD_KEYS:
-        value = _attribute_value(attributes, key)
-        if value is not None:
-            return _period_seconds(value, key)
-    for key in _RATE_KEYS:
-        value = _attribute_value(attributes, key)
-        if value is not None:
-            rate = _as_float(value, key)
-            if rate <= 0:
-                raise ValueError(f"timing attribute {key!r} must be > 0, got {rate!r}")
-            return 1.0 / rate
-    return None
+    return period_seconds_from_attributes(_plain_attributes(attributes))
 
 
 def _step_size_from_attributes(
     attributes: Mapping[str, object], explicit: float | None
 ) -> float:
-    if explicit is not None:
-        step = _as_float(explicit, "step_size_s")
-        if step <= 0:
-            raise ValueError(f"step_size_s must be > 0, got {step!r}")
-        return step
-    period = _period_seconds_from_attributes(attributes)
-    return DEFAULT_STEP_SIZE_S if period is None else period
+    return step_size_from_attributes(_plain_attributes(attributes), explicit)
 
 
 def _model_step_size(
@@ -339,59 +272,36 @@ def _model_step_size(
     components: list[Any],
     explicit: float | None,
 ) -> float:
-    """First authored step period in reduction, component, then port scope."""
+    """Extract the scopes; ``pyfmi_interop`` owns their precedence."""
 
-    if explicit is not None:
-        return _step_size_from_attributes({}, explicit)
-    scopes: list[Mapping[str, object]] = [_attributes(reduction.attributes)]
-    scopes.extend(
-        _attributes(component.attributes) for component in components
+    system = _plain_attributes(_attributes(reduction.attributes))
+    component_scopes = [
+        _plain_attributes(_attributes(component.attributes))
+        for component in components
+    ]
+    port_scopes = [
+        _plain_attributes(attributes)
+        for component in components
+        for attributes in _port_attributes(component).values()
+    ]
+    return step_size_for_scopes(
+        system, component_scopes, port_scopes, explicit=explicit
     )
-    for component in components:
-        scopes.extend(_port_attributes(component).values())
-    for scope in scopes:
-        period = _period_seconds_from_attributes(scope)
-        if period is not None:
-            return period
-    return DEFAULT_STEP_SIZE_S
 
 
 def _rate_hz_from_attributes(attributes: Mapping[str, object]) -> float | None:
-    """Signal rate; explicit rate keys win over the step/period spelling."""
-
-    for key in _RATE_KEYS:
-        value = _attribute_value(attributes, key)
-        if value is not None:
-            rate = _as_float(value, key)
-            if rate <= 0:
-                raise ValueError(f"timing attribute {key!r} must be > 0, got {rate!r}")
-            return rate
-    for key in _PERIOD_KEYS:
-        value = _attribute_value(attributes, key)
-        if value is not None:
-            return 1.0 / _period_seconds(value, key)
-    for key in _STEP_KEYS:
-        value = _attribute_value(attributes, key)
-        if value is not None:
-            return 1.0 / _period_seconds(value, key)
-    return None
+    return rate_hz_from_attributes(_plain_attributes(attributes))
 
 
 # -- variable mapping ------------------------------------------------------
 
 
 def _data_type(type_name: str) -> ir.DataType:
-    try:
-        return _FMI_TYPES[type_name.strip().lower()]
-    except KeyError as error:
-        raise ValueError(f"unsupported FMI data type {type_name!r}") from error
+    return data_type_from_name(type_name)
 
 
 def _direction(causality: str) -> ir.Direction:
-    try:
-        return _CAUSALITIES[causality]
-    except KeyError as error:
-        raise ValueError(f"unsupported FMI causality {causality!r}") from error
+    return direction_from_causality(causality)
 
 
 def _signal_from_variable(
@@ -400,26 +310,19 @@ def _signal_from_variable(
     rate_hz: float | None,
     unit: str | None,
 ) -> ir.Signal:
-    data_type = _data_type(variable.type_name)
-    return ir.Signal(
+    return signal_from_values(
         name=variable.name,
-        value_reference=variable.value_reference or 1,
-        data_type=data_type,
-        direction=_direction(variable.causality),
+        type_name=variable.type_name,
+        causality=variable.causality,
+        value_reference=variable.value_reference,
+        start=variable.start,
         rate_hz=rate_hz,
         unit=unit,
-        initial=variable.start,
-        capacity=DEFAULT_STRING_CAPACITY if data_type is ir.DataType.STRING else 0,
     )
 
 
 def _identifier(text: str) -> str:
-    cleaned = re.sub(r"[^0-9A-Za-z_]", "_", text)
-    if not cleaned:
-        return "model"
-    if cleaned[0].isdigit():
-        return f"_{cleaned}"
-    return cleaned
+    return sanitize_identifier(text)
 
 
 def _project_spec(
@@ -449,7 +352,7 @@ def _project_spec(
                 _signal_from_variable(
                     variable,
                     rate_hz=rate_hz,
-                    unit=_text_attribute(attributes, "unit"),
+                    unit=unit_from_attributes(_plain_attributes(attributes)),
                 )
             )
 
