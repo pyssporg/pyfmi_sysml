@@ -1,6 +1,7 @@
 # pyfmi_sysml
 
-SysML ingestion for the FMI interface generators. Contributors read `AGENTS.md`.
+SysML ingestion for the FMI interface generators. Contributors read
+[`AGENTS.md`](AGENTS.md).
 
 `pyfmi_sysml` loads a SysML v2 architecture through
 [`pycps_sysml2`](https://github.com/pyssporg/pycps_sysml2), reduces it once to
@@ -38,10 +39,10 @@ Each accepts a `.sysml` file or a directory of them, `--composition`,
 `--include PATH` (repeatable package root, appended in flag order), and
 `-o/--output` (default `build/`). `--core-definitions` is sugar for one root:
 it appends `pyssp_sysml_definitions.core_definitions()` after every `--include`.
-Per command: `model-description` adds `--component`, `--generation-time`, and
-`--base-index`; `c-headers` adds `--component`, `--prefix`, and `--base-index`;
-`c-runtime` adds those plus `--omit`; `modelica` adds `--package` and
-`--within`.
+Per command: `model-description` adds
+`--component`, `--generation-time`, and `--base-index`; `c-headers` adds
+`--component`, `--prefix`, and `--base-index`; `c-runtime` adds those plus
+`--omit`; `modelica` adds `--package` and `--within`.
 
 ```text
 usage: pyfmi-sysml [-h] COMMAND ...
@@ -76,3 +77,28 @@ Also exported: `load_model`, `load_architecture`, `model_from_architecture`,
 `model_from_sysml`, `ParsedModel`, `adapter_from_reduction`,
 `interop_definitions`, `load_with_interop`, `DEFAULT_STEP_SIZE_S`, and
 `DEFAULT_STRING_CAPACITY`.
+
+## Examples
+
+Runnable walkthroughs live in [`examples/`](examples/README.md): one FMI XML
+document per leaf, the Modelica package, a C++17 runtime compiled to a loadable
+FMU, and the interop adapter. Each directory has its own README and writes only
+under `build/`. Start with:
+
+```bash
+python examples/model-description/build.py
+```
+
+## Development
+
+Install the dev extra as above, then:
+
+```bash
+./venv/bin/python -m pytest                    # everything
+./venv/bin/python -m pytest -m "not slow"      # the default subset
+./venv/bin/ruff check src tests
+```
+
+`pyproject.toml` carries the explicit ruff selection. Contributor rules, cross-
+repository boundaries, and the one-parse contract are in
+[`AGENTS.md`](AGENTS.md).

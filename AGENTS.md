@@ -57,5 +57,5 @@ authoritative than the workspace source.
 
 - Python >= 3.11.
 - Install: `python3 -m venv venv && . venv/bin/activate && pip install -e ".[dev]"`.
-- Tests: `python -m pytest`; the CI subset is `python -m pytest -m "not slow"`.
+- Tests: `python -m pytest`; the default subset is `python -m pytest -m "not slow"`.
 - Lint: `ruff check src tests`.
