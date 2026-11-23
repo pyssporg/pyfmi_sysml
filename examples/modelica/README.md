@@ -1,12 +1,49 @@
 # modelica
 
-Generate a Modelica package, then fill the equation the generator deliberately
-leaves out.
+Generate a Modelica package from SysML, then fill the equation the generator
+leaves to the implementer.
 
-`generate_modelica` writes a package with a complete connector set and a
-`partial model` for each component. The implementer model `Scale.mo` is created
-once with an empty `equation` section and never rewritten — that is the seam.
-This example ships the completed model:
+## Run
+
+From the workspace root, in the workspace venv:
+
+```bash
+python repos/pyfmi_sysml/examples/modelica/build_model.py
+```
+
+Everything lands under the gitignored `build/examples/modelica/`:
+
+| Path | What |
+| --- | --- |
+| `GeneratedInterfaces/package.mo` | the package root |
+| `GeneratedInterfaces/package.order` | the package file order |
+| `GeneratedInterfaces/GeneratedInterfaces.mo` | the root package contents |
+| `GeneratedInterfaces/Interfaces.mo` | the shared connector set |
+| `GeneratedInterfaces/Scale_Interface.mo` | the generated `partial model` seam |
+| `GeneratedInterfaces/Scale.mo` | the completed implementer model |
+
+Expected output:
+
+```text
+build/examples/modelica/GeneratedInterfaces/GeneratedInterfaces.mo
+build/examples/modelica/GeneratedInterfaces/Interfaces.mo
+build/examples/modelica/GeneratedInterfaces/Scale.mo
+build/examples/modelica/GeneratedInterfaces/Scale_Interface.mo
+build/examples/modelica/GeneratedInterfaces/package.mo
+build/examples/modelica/GeneratedInterfaces/package.order
+```
+
+## Setup
+
+The workspace venv from the top-level `README.md`; no native tool is needed:
+the artifact is the Modelica text.
+
+## What the definition encodes
+
+`minimal.sysml` declares one interface parameter, one input, and one output.
+`generate_modelica` writes a complete connector set and a `partial model` per
+component, with an empty `equation` section in `Scale.mo` — that is the seam.
+The example ships the completed model and copies it over the generated stub:
 
 ```modelica
 model Scale
@@ -16,30 +53,7 @@ equation
 end Scale;
 ```
 
-From the repository root:
-
-```bash
-python examples/modelica/build_model.py
-```
-
-The script generates into `build/examples/modelica/GeneratedInterfaces/`,
-replaces `Scale.mo` with the completed model, and — when `omc` is on `PATH` —
-runs `checkModel` on the package and `buildModel` on `Scale`.
-
-Expected output (paths trimmed):
-
-```text
-.../build/examples/modelica/GeneratedInterfaces/GeneratedInterfaces.mo
-.../build/examples/modelica/GeneratedInterfaces/Interfaces.mo
-.../build/examples/modelica/GeneratedInterfaces/Scale.mo
-.../build/examples/modelica/GeneratedInterfaces/Scale_Interface.mo
-.../build/examples/modelica/GeneratedInterfaces/package.mo
-.../build/examples/modelica/GeneratedInterfaces/package.order
-wrote .../build/examples/modelica/GeneratedInterfaces/Scale.mo
-OpenModelica checked and built GeneratedInterfaces.Scale
-```
-
-The generated seam, for reference:
+The seam it extends:
 
 ```modelica
 partial model Scale_Interface
@@ -49,14 +63,6 @@ partial model Scale_Interface
 end Scale_Interface;
 ```
 
-Without the equation, `buildModel` fails with *Too few equations,
-under-determined system*. `omc` is optional: the script skips the check and
-still writes the package when it is absent.
-
-The manual equivalent:
-
-```bash
-pyfmi modelica examples/modelica/minimal.sysml -o build/examples/modelica
-cp examples/modelica/Scale.mo build/examples/modelica/GeneratedInterfaces/
-omc build/examples/modelica/build.mos
-```
+Without the equation, `buildModel` reports *Too few equations,
+under-determined system*. The parameter, input, and output roles, and the
+shared vocabulary, are owned by `pyssp_sysml_definitions/docs/roles.md`.

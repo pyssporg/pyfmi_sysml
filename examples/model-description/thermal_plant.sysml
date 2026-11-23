@@ -4,9 +4,6 @@ package ThermalPlant {
   private import ScalarValues::*;
   private import PysspCore::*;
 
-  port def ParameterInterface;
-  attribute def ParameterSet;
-
   port def SensorParameters :> ParameterInterface {
     attribute gain : Real = 1.0;
     attribute offset : Real = 0.0;

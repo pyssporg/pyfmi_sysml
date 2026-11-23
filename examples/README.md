@@ -1,51 +1,49 @@
 # Examples
 
-Runnable walkthroughs for `pyfmi_interfaces`. Each directory is **fully
-standalone**: it carries its own SysML input, its scripts, and its README, and
-shares no code or model with its neighbours. Copy one out of the tree and it
-still describes the whole step.
+Runnable walkthroughs for `pyfmi_sysml`. Each directory carries its own SysML
+input and scripts, and no directory imports another.
 
-Every example writes only under `build/` (or the `--out` you pass), which is
-gitignored. No generated source, compiled binary, or `.fmu` is committed. The
-one exception is `model-description/reference/`: the pinned clock makes that
-output deterministic, so it is checked in for diffing.
+## Run
 
-| Example | Own input | Shows | Needs |
-| --- | --- | --- | --- |
-| [`model-description/`](model-description/) | `thermal_plant.sysml` | one FMI XML document per leaf, from a script and the CLI | `pyfmi` |
-| [`modelica/`](modelica/) | `minimal.sysml` | Modelica package and the implementer seam | `omc` (optional) |
-| [`c-runtime/`](c-runtime/) | `minimal.sysml` | C++17 runtime, five hooks, compile, pack, load | `g++`, `fmpy` |
+From the workspace root, in the workspace venv. Every example writes under the
+gitignored `build/examples/` and takes an optional `--out`; the `sysml` examples
+also accept `--serialization`, and `build_one.py` accepts `--unit`.
 
-## Prerequisites
+| Example | Builds | Command |
+| --- | --- | --- |
+| [`model-description/`](model-description/) | one FMI XML document per leaf part | `python repos/pyfmi_sysml/examples/model-description/build.py` |
+| [`modelica/`](modelica/) | a Modelica package plus the completed `Scale` model | `python repos/pyfmi_sysml/examples/modelica/build_model.py` |
+| [`c-runtime/`](c-runtime/) | a C++17 runtime compiled and packed into an FMU | `python repos/pyfmi_sysml/examples/c-runtime/build_fmu.py` |
+| [`sysml/adapter/`](sysml/adapter/) | one interop adapter FMU | `python repos/pyfmi_sysml/examples/sysml/adapter/generate_adapter_fmu.py` |
+| [`sysml/system/`](sysml/system/) | every interop unit in one architecture | `python repos/pyfmi_sysml/examples/sysml/system/build_all.py` |
 
-Install the package with its dev extra (see the top-level `README.md`):
+## Setup
 
-```bash
-python3 -m venv venv
-./venv/bin/pip install -e ".[dev]"
-```
+One workspace venv from `requirements-experimental.txt` and
+`requirements-thirdparty.txt`, with the working trees installed editable (see
+the top-level `README.md`). `c-runtime` and both `sysml` examples need `cmake`,
+`ninja`, `g++`, and `protoc` on `PATH`.
 
-Run the commands from the repository root. If the `pyfmi` console script is not
-on `PATH`, use `python -m pyfmi_interfaces.cli` instead.
+## Shared vocabulary
 
-## Run each example
+The models import the shared role vocabulary (`private import PysspCore::*;`,
+or `private import PyfmiInterop::*;` for the interop units) and never redeclare
+`ParameterInterface`, `ParameterSet`, `FmuModel`, or the metadata containers.
+Each script supplies the vocabulary as an include root through
+`pyssp_sysml_definitions.core_definitions()`; the interop library is added when
+the model imports it. No `.sysml` vocabulary is copied here.
 
-```bash
-# One modelDescription.xml per leaf part
-python examples/model-description/build.py
+The roles themselves — build metadata, initialization configuration, runtime
+signal — are defined once in `pyssp_sysml_definitions/docs/roles.md`. These
+examples state only where each role lands in this repository's FMI and Modelica
+artifacts.
 
-# Modelica package plus the completed implementer model
-python examples/modelica/build_model.py
+The `pyfmi-sysml` CLI has no `--include` option, so the scripts call the public
+`pyfmi_sysml` wrappers and pass `core_definitions()` explicitly: the vocabulary
+is a real load root, not a name match.
 
-# Sources to a loadable FMU, then step it in fmpy
-python examples/c-runtime/build_fmu.py
-```
+## What the library does not do
 
-Each directory's `README.md` has the expected file tree, the flags that matter,
-the CLI equivalent of its script, and the manual command sequence.
-
-## What is not here
-
-The package never compiles generated code. The `g++` and `omc` steps in the
-`c-runtime` and `modelica` examples are the implementer's build steps; the
+The package never compiles generated code. The `g++` and CMake steps in the
+`c-runtime` and `sysml` examples are the implementer's build steps; the
 library's job ends when it has written the sources.

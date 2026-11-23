@@ -1,29 +1,45 @@
 # model-description
 
-Turn a SysML v2 architecture into FMI 2.0 XML: one document per exported leaf
-part. No compiler, no packaging.
+Build one FMI 2.0 `modelDescription.xml` per exported leaf part from a SysML v2
+architecture.
 
-The input is this directory's own `thermal_plant.sysml`: a container root with
-two leaf parts, `Sensor` and `Valve`. From the repository root:
+## Run
 
-```bash
-python examples/model-description/build.py
-```
-
-The script pins the generation time, writes one document per leaf, and prints
-every written path. The CLI equivalent:
+From the workspace root, in the workspace venv:
 
 ```bash
-pyfmi model-description examples/model-description/thermal_plant.sysml \
-  -o build/examples/model-description
+python repos/pyfmi_sysml/examples/model-description/build.py
 ```
 
-Either way, two documents are written:
+Everything lands under the gitignored `build/examples/model-description/`:
+
+| Path | What |
+| --- | --- |
+| `Sensor/modelDescription.xml` | the `Sensor` leaf's FMI interface |
+| `Valve/modelDescription.xml` | the `Valve` leaf's FMI interface |
+
+Expected output:
 
 ```text
 build/examples/model-description/Sensor/modelDescription.xml
 build/examples/model-description/Valve/modelDescription.xml
 ```
+
+The script pins the generation time, so a fresh run is byte-identical to the
+checked-in `reference/` tree.
+
+## Setup
+
+The workspace venv from the top-level `README.md`. No compiler, no extra
+package.
+
+## What the definition encodes
+
+`thermal_plant.sysml` is this directory's input: one container root with two
+leaf parts, `Sensor` and `Valve`, plus their port definitions. A leaf part is
+one FMI model; the container is not exported. The shared vocabulary is a load
+root (`core_definitions()`), and the roles are owned by
+`pyssp_sysml_definitions/docs/roles.md`.
 
 Each leaf exports its own set. A port whose only member is a non-array `value`
 takes the port name; any other field keeps the qualified spelling:
@@ -38,23 +54,6 @@ takes the port name; any other field keeps the qualified spelling:
 | `Valve` | `command.open` | 1 | input | `Real` |
 | `Valve` | `position` | 2 | output | `Real` |
 
-`reference/` holds the checked-in output for both leaves. The generation time is
-pinned, so it is byte-identical to a fresh run; diff your output against it:
-
-```bash
-diff -r examples/model-description/reference build/examples/model-description
-```
-
-Useful flags (the script and the CLI take the same ones):
-
-- `--component Valve` writes only that leaf.
-- `--generation-time 2000-01-01T00:00:00Z` pins the clock. The default is the
-  epoch, so an unpinned run is already reproducible; a naive timestamp is
-  refused.
-- `--base-index 1` shifts array suffixes, for OMC-built Modelica FMUs.
-
-Validate the documents with the same oracle the test suite uses:
-
-```bash
-python -c "import fmpy, glob; [fmpy.read_model_description(p) for p in glob.glob('build/examples/model-description/*/modelDescription.xml')]"
-```
+The deployment parameters (`gain`, `offset`, `limit`) are initialization
+configuration, not runtime signals; the inputs and outputs are the FMI
+interface.

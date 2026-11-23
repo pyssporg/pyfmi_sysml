@@ -4,6 +4,10 @@ This is the single-unit mode: the architecture is loaded once, one
 ``:> FmuInterop`` leaf is selected with ``composition=``, and its own model is
 carried through the ``psysml2`` FMI layer into one FMU.  Nothing from the other
 units is merged into its interface.
+
+Everything is written under ``--out`` (default
+``build/examples/sysml/system/one/<serialization>/``), which is gitignored when
+run from the workspace root.
 """
 
 from __future__ import annotations
@@ -14,11 +18,11 @@ from pathlib import Path
 from _pipeline import build_unit, fmu_unit_names
 
 from pyfmi_sysml import load_architecture
+from pyssp_sysml_definitions import core_definitions
 
 EXAMPLE_DIR = Path(__file__).resolve().parent
-REPO_ROOT = EXAMPLE_DIR.parents[2]
 DEFAULT_SYSML = EXAMPLE_DIR / "bench.sysml"
-DEFAULT_OUT_ROOT = REPO_ROOT / "build" / "examples" / "sysml" / "system" / "one"
+DEFAULT_OUT = Path("build") / "examples" / "sysml" / "system" / "one"
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -28,14 +32,13 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--unit",
         default=None,
-        help="Part definition to package (default: the only unit).",
+        help="Part definition to package (default: the first unit by name).",
     )
-    parser.add_argument("--sysml", type=Path, default=DEFAULT_SYSML)
     parser.add_argument(
         "--out",
         type=Path,
-        default=None,
-        help=f"Output directory (default: {DEFAULT_OUT_ROOT}/<serialization>).",
+        default=DEFAULT_OUT,
+        help=f"output root (default: {DEFAULT_OUT}/<serialization>)",
     )
     parser.add_argument(
         "--serialization",
@@ -50,34 +53,23 @@ def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
 
-    architecture = load_architecture(args.sysml)
+    architecture = load_architecture(DEFAULT_SYSML, includes=[core_definitions()])
     units = fmu_unit_names(architecture)
 
-    unit = args.unit
-    if unit is None:
-        if len(units) != 1:
-            available = ", ".join(units) or "none"
-            parser.error(
-                f"{args.sysml} has {len(units)} interop units ({available}); "
-                "pass --unit NAME"
-            )
-        unit = units[0]
-    elif unit not in units:
+    unit = args.unit or (units[0] if units else None)
+    if unit is None or unit not in units:
         available = ", ".join(units) or "none"
         parser.error(f"no interop unit {unit!r}; choose from: {available}")
 
-    out_dir = args.out or DEFAULT_OUT_ROOT / args.serialization
-    model, model_dir, fmu_path = build_unit(
+    out_dir = args.out / args.serialization
+    _, model_dir, fmu_path = build_unit(
         architecture,
         unit,
         out_dir,
         serialization=args.serialization,
     )
-
-    print(f"unit: {unit}")
-    print(f"signals: {len(model.signals)}")
-    print(f"model sources: {model_dir}")
-    print(f"fmu: {fmu_path}")
+    print(model_dir)
+    print(fmu_path)
     return 0
 
 

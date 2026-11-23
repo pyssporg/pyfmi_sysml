@@ -4,9 +4,6 @@ package Minimal {
   private import ScalarValues::*;
   private import PysspCore::*;
 
-  port def ParameterInterface;
-  attribute def ParameterSet;
-
   port def Signal {
     attribute value : Real;
   }

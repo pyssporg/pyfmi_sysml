@@ -7,11 +7,11 @@ The library generates sources; this script plays the implementer:
    model hook stub.
 3. ``Minimal_Scale_model.cpp`` from this directory replaces the stub.
 4. ``g++`` compiles the runtime and the model into ``Scale.so``.
-5. ``pyssp_standard.FMU`` packs the archive; ``fmpy`` loads it, sets
-   ``gain=2`` and ``u=3``, steps, and reads ``y == 6``.
+5. ``pyssp_standard.FMU`` packs the archive.
 
 Everything is written under ``--out`` (default ``build/examples/c-runtime/``),
-which is gitignored. The generation time is pinned so the XML is reproducible.
+which is gitignored when run from the workspace root. The generation time is
+pinned so the XML is reproducible.
 """
 
 from __future__ import annotations
@@ -23,12 +23,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Sequence
 
-from pyfmi_sysml import generate_c_runtime, generate_model_description
+from pyssp_sysml_definitions import core_definitions
+from pyfmi_sysml import (
+    generate_c_runtime,
+    generate_model_description,
+    load_architecture,
+)
 
 EXAMPLE_DIR = Path(__file__).resolve().parent
-REPO_ROOT = EXAMPLE_DIR.parents[1]
 DEFAULT_SYSML = EXAMPLE_DIR / "minimal.sysml"
-DEFAULT_OUT = REPO_ROOT / "build" / "examples" / "c-runtime"
+DEFAULT_OUT = Path("build") / "examples" / "c-runtime"
 
 GENERATION_TIME = datetime(2000, 1, 1, tzinfo=timezone.utc)
 PREFIX = "Minimal"
@@ -36,36 +40,29 @@ COMPONENT = "Scale"
 RUNTIME = f"{PREFIX}_{COMPONENT}_fmi.cpp"
 MODEL = f"{PREFIX}_{COMPONENT}_model.cpp"
 BINARY = f"{COMPONENT}.so"
-STEP = 0.1
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    args = _parse(argv)
-    output_dir = Path(args.out)
-    source = Path(args.sysml)
-
-    [description] = generate_model_description(
-        source, output_dir, generation_time=GENERATION_TIME
-    )
-    generate_c_runtime(source, output_dir)
-
-    shutil.copyfile(EXAMPLE_DIR / MODEL, output_dir / MODEL)
-    print(f"wrote {output_dir / MODEL}")
-
-    _compile(output_dir)
-    fmu = _package(output_dir, description)
-    result = _step(fmu)
-
-    print(f"\narchive: {fmu}")
-    print(f"y = gain * u = 2 * 3 = {result}")
-    return 0
-
-
-def _parse(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--sysml", default=str(DEFAULT_SYSML), help="SysML source")
-    parser.add_argument("--out", default=str(DEFAULT_OUT), help="output directory")
-    return parser.parse_args(argv)
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=DEFAULT_OUT,
+        help=f"output directory (default: {DEFAULT_OUT})",
+    )
+    args = parser.parse_args(argv)
+
+    architecture = load_architecture(DEFAULT_SYSML, includes=[core_definitions()])
+    [description] = generate_model_description(
+        architecture, args.out, generation_time=GENERATION_TIME
+    )
+    generate_c_runtime(architecture, args.out)
+
+    shutil.copyfile(EXAMPLE_DIR / MODEL, args.out / MODEL)
+    _compile(args.out)
+    fmu = _package(args.out, description)
+    print(fmu)
+    return 0
 
 
 def _compile(output_dir: Path) -> None:
@@ -87,7 +84,6 @@ def _compile(output_dir: Path) -> None:
         "-o",
         str(output_dir / BINARY),
     ]
-    print("$ " + " ".join(command))
     built = subprocess.run(command, capture_output=True, text=True)
     if built.returncode != 0:
         raise SystemExit(f"compile failed:\n{built.stdout}{built.stderr}")
@@ -105,43 +101,6 @@ def _package(output_dir: Path, description: Path) -> Path:
         fmi_version="2.0",
     )
     return fmu
-
-
-def _step(fmu: Path) -> float:
-    """Load the archive in fmpy, drive one step, and return ``y``."""
-    try:
-        import fmpy
-        from fmpy.fmi2 import FMU2Slave
-    except ModuleNotFoundError:
-        raise SystemExit("fmpy is required to load the example: pip install fmpy")
-
-    description = fmpy.read_model_description(str(fmu))
-    unzip_dir = fmu.parent / "unpacked"
-    shutil.rmtree(unzip_dir, ignore_errors=True)
-    fmpy.extract(str(fmu), str(unzip_dir))
-
-    by_name = {variable.name: variable.valueReference
-               for variable in description.modelVariables}
-    slave = FMU2Slave(
-        guid=description.guid,
-        modelIdentifier=description.coSimulation.modelIdentifier,
-        unzipDirectory=str(unzip_dir),
-        instanceName="scale",
-    )
-    slave.instantiate()
-    slave.setupExperiment(startTime=0.0)
-    slave.setReal([by_name["gain"]], [2.0])
-    slave.enterInitializationMode()
-    slave.exitInitializationMode()
-    slave.setReal([by_name["u"]], [3.0])
-    slave.doStep(currentCommunicationPoint=0.0, communicationStepSize=STEP)
-    y = slave.getReal([by_name["y"]])[0]
-    slave.terminate()
-    slave.freeInstance()
-
-    if y != 6.0:
-        raise SystemExit(f"unexpected output: y = {y}, expected 6.0")
-    return y
 
 
 if __name__ == "__main__":
