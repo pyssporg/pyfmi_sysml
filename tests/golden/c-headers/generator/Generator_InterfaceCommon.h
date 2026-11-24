@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* Generated from architecture package Generator. Do not edit manually. */
+/* Generated from interface package Generator. Do not edit manually. */
 
 typedef struct Generator_RealSignal {
   double value;

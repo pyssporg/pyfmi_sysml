@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* Generated from architecture package Bus. Do not edit manually. */
+/* Generated from interface package Bus. Do not edit manually. */
 
 typedef struct Bus_Actuation {
   double channel_a;

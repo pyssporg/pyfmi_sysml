@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* Generated from architecture package Minimal. Do not edit manually. */
+/* Generated from interface package Minimal. Do not edit manually. */
 
 typedef struct Minimal_Signal {
   double value;

@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* Generated from architecture package Sensor. Do not edit manually. */
+/* Generated from interface package Sensor. Do not edit manually. */
 
 typedef struct Sensor_Rate {
   double rate;

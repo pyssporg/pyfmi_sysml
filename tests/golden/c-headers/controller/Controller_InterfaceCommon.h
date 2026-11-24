@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* Generated from architecture package Controller. Do not edit manually. */
+/* Generated from interface package Controller. Do not edit manually. */
 
 typedef struct Controller_Command {
   double manual;
