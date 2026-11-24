@@ -1,9 +1,9 @@
 """Ingestion of a SysML v2 architecture into the public model specification.
 
-The SysML dialect itself is owned by :mod:`pycps_sysml2`; the FMI variable
+The SysML dialect itself is owned by :mod:`pycps_sysml`; the FMI variable
 reduction is owned by :mod:`pyfmi_interfaces.core`.  This module only maps that
 reduction onto :mod:`pyfmi_interop.core`, so parsing is never re-implemented
-here.  ``pycps_sysml2`` and ``pyfmi_interfaces`` are runtime dependencies;
+here.  ``pycps_sysml`` and ``pyfmi_interfaces`` are runtime dependencies;
 importing this module works without them, and calling :func:`parse` or the
 compatibility helpers raises a :class:`RuntimeError` when they are missing.
 
@@ -138,8 +138,8 @@ def load_architecture(
     :func:`model_from_architecture` as ``composition=``.
     """
 
-    pycps_sysml2, _ = _require_sysml()
-    return load_with_definitions(source, pycps_sysml2.load, includes=includes)
+    pycps_sysml, _ = _require_sysml()
+    return load_with_definitions(source, pycps_sysml.load, includes=includes)
 
 
 def load_model(
@@ -196,12 +196,12 @@ def model_from_architecture(
 
 def _require_sysml():
     try:
-        import pycps_sysml2
+        import pycps_sysml
     except ImportError as error:
         raise RuntimeError(f"SysML ingestion requires {_SYSML_EXTRA}") from error
     from pyfmi_sysml.reduction import to_reduction
 
-    return pycps_sysml2, to_reduction
+    return pycps_sysml, to_reduction
 
 
 # -- reduction lookups -----------------------------------------------------

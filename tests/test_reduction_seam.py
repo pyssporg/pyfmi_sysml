@@ -3,7 +3,7 @@
 This is the seam that lets parsing and generation be used separately: the
 dialect is read once by ``to_reduction``, and every generator then produces the
 same bytes from the reduction as from the architecture path, without importing
-``pycps_sysml2`` again.
+``pycps_sysml`` again.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from __future__ import annotations
 import builtins
 from pathlib import Path
 
-import pycps_sysml2
+import pycps_sysml
 import pytest
 
 from conftest import GENERATION_TIME, fixture_path
@@ -82,7 +82,7 @@ def test_generators_do_not_import_the_dialect_for_a_reduction(
     real_import = builtins.__import__
 
     def blocked(name, *args, **kwargs):
-        if name.split(".")[0] == "pycps_sysml2":
+        if name.split(".")[0] == "pycps_sysml":
             raise AssertionError(f"generator imported the dialect: {name}")
         return real_import(name, *args, **kwargs)
 
@@ -284,7 +284,7 @@ def test_parameter_interface_port_must_use_the_reserved_name(
     """The vocabulary reserves ``parameters``; another name drops the values."""
     source = tmp_path / "misnamed.sysml"
     source.write_text(MISNAMED_PARAMETERS_MODEL, encoding="utf-8")
-    architecture = pycps_sysml2.load(source, pycps_sysml2.core_definitions())
+    architecture = pycps_sysml.load(source, pycps_sysml.core_definitions())
 
     with pytest.raises(ValueError, match="must be named 'parameters'"):
         to_reduction(architecture)

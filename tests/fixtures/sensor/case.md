@@ -24,7 +24,7 @@ six scalar variables in value-reference order `0..5` — parameters
 `parameters.capacity` (`3160.0`), `parameters.reserve` (`0.08`), input
 `supply.rate`, and output fields `level.remaining`, `level.fraction`,
 `level.empty`; every `level.*` variable is an output and therefore not writable
-**Independent oracle**: `pycps_sysml2.load` parses the file, the FMI2 XSD and
+**Independent oracle**: `pycps_sysml.load` parses the file, the FMI2 XSD and
 semantic validator check the document, and the C headers are compiled by
 `gcc -std=c11` and `g++ -std=c++17`
 **Comparison**: byte-for-byte against the goldens under

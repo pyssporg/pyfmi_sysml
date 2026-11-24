@@ -2,7 +2,7 @@
 
 ``pyfmi_interfaces`` is parser-free: it consumes a ``Reduction`` and nothing
 else. This test locates the installed ``pyfmi_interfaces`` source and asserts
-that no module in it imports ``pycps_sysml2``, while this package does import
+that no module in it imports ``pycps_sysml``, while this package does import
 it (the reduction bridge).
 """
 
@@ -16,7 +16,7 @@ import pytest
 
 pytestmark = pytest.mark.static
 
-PARSER = "pycps_sysml2"
+PARSER = "pycps_sysml"
 
 PACKAGE_SRC = Path(__file__).resolve().parents[1] / "src" / "pyfmi_sysml"
 

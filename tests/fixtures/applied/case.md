@@ -22,7 +22,7 @@ variables in value-reference order `0..3` — parameters `gains[0]` (`1.0`) and
 `gains[1]` (`2.5`), then input `u` and output `y`;
 `DefaultExperiment startTime="0.0" stopTime="10.0" stepSize="0.1"`; the
 `tuned` and `defaults` attributes are authoring data and are not variables
-**Independent oracle**: `pycps_sysml2.load` parses the file, and the FMI2 XSD
+**Independent oracle**: `pycps_sysml.load` parses the file, and the FMI2 XSD
 and semantic validator check the document
 **Comparison**: assertions on the parsed document; this fixture has no golden
 **Normalization**: none; parameters precede ports and the array is expanded in

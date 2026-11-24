@@ -116,7 +116,7 @@ def test_both_roots_are_supplied_when_both_are_imported(tmp_path: Path) -> None:
 @pytest.mark.unit
 def test_an_import_free_model_keeps_the_export_unit(tmp_path: Path) -> None:
     """Neither root joins, so the selected unit is the direct parse's."""
-    pycps = pytest.importorskip("pycps_sysml2")
+    pycps = pytest.importorskip("pycps_sysml")
     source = _write(tmp_path, _NEITHER)
 
     before = to_reduction(pycps.load(source))

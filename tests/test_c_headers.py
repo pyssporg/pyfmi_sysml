@@ -15,7 +15,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
-from pycps_sysml2 import core_definitions, load
+from pycps_sysml import core_definitions, load
 
 from conftest import GOLDEN_ROOT, GENERATION_TIME, load_fixture, update_goldens
 from golden_utils import assert_golden_text

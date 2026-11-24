@@ -66,7 +66,7 @@ def _write_chain(tmp_path: Path) -> tuple[Path, Path]:
 
 @pytest.fixture(scope="module")
 def example():
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
     import pyfmi_sysml as sysml
 
@@ -99,7 +99,7 @@ def test_example_uses_the_shared_interop_library(example, tmp_path):
 
 
 def test_inline_model_importing_the_library_generates(tmp_path):
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
     import pyfmi_sysml as sysml
 
@@ -156,7 +156,7 @@ def test_generate_adapter_requires_a_parsed_model(example, tmp_path):
 
 @pytest.mark.component
 def test_library_defined_fmu_loads_and_generates_from_includes(tmp_path):
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
     import pyfmi_sysml as sysml
 
@@ -374,7 +374,7 @@ def test_packaged_archive_uses_the_sysml2_model_description(example, tmp_path):
 
 
 def _generate_variant(tmp_path, name: str, text: str):
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
     import pyfmi_sysml as sysml
 
@@ -453,7 +453,7 @@ def test_adapter_rejects_a_rate_that_is_not_a_multiple_of_the_slowest(tmp_path):
 
 
 def test_adapter_generates_without_a_step_size(tmp_path):
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
     import pyfmi_sysml as sysml
 
@@ -487,7 +487,7 @@ _SYSTEM_UNITS = ["ActuatorLink", "Controller", "SensorLink"]
 
 
 def _system_architecture():
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
     from pyfmi_sysml import load_architecture
 
@@ -520,7 +520,7 @@ def test_fmu_units_lists_the_three_system_units_sorted():
 
 
 def test_load_model_composition_selects_only_that_units_signals():
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
     import pyfmi_sysml as sysml
 
@@ -618,7 +618,7 @@ def test_generate_adapter_never_re_resolves_the_export_unit(
 
 
 def test_authored_parameter_and_neutral_input_starts_survive_the_handoff(tmp_path):
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
     from test_parameters import _FIXTURE
 

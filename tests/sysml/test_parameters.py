@@ -271,7 +271,7 @@ _SKIP = skip_reason("the two-instance runner is POSIX-only")
 
 @pytest.fixture(scope="module", params=["interop", "psysml2"])
 def generated(request, tmp_path_factory):
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
     import pyfmi_sysml as sysml
 

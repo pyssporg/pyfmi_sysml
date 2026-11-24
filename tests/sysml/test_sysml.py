@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.sysml]
 
 
 class _Attribute:
-    """Minimal stand-in for :class:`pycps_sysml2.Attribute`."""
+    """Minimal stand-in for :class:`pycps_sysml.Attribute`."""
 
     def __init__(self, value: object) -> None:
         self.value = value
@@ -97,7 +97,7 @@ def test_model_name_sanitization() -> None:
 
 
 def _architecture() -> object:
-    pycps = pytest.importorskip("pycps_sysml2")
+    pycps = pytest.importorskip("pycps_sysml")
     try:
         import pyfmi_interfaces  # noqa: F401
     except Exception as error:  # noqa: BLE001 - broken optional dependency
@@ -189,9 +189,9 @@ def test_model_from_architecture_honours_explicit_step_size_and_name() -> None:
 def test_parse_reduces_once_and_loads_the_source_once(
     tmp_path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
-    import pycps_sysml2
+    import pycps_sysml
     import pyfmi_sysml.reduction as upstream
     from test_parameters import _FIXTURE
 
@@ -199,7 +199,7 @@ def test_parse_reduces_once_and_loads_the_source_once(
     source.write_text(_FIXTURE, encoding="utf-8")
 
     loads = []
-    real_load = pycps_sysml2.load
+    real_load = pycps_sysml.load
 
     def counting_load(*args, **kwargs):
         loads.append(args)
@@ -212,7 +212,7 @@ def test_parse_reduces_once_and_loads_the_source_once(
         reductions.append(args)
         return real_reduction(*args, **kwargs)
 
-    monkeypatch.setattr(pycps_sysml2, "load", counting_load)
+    monkeypatch.setattr(pycps_sysml, "load", counting_load)
     monkeypatch.setattr(upstream, "to_reduction", counting_reduction)
 
     # The composition adds a vocabulary root on a second load when the model
@@ -228,7 +228,7 @@ def test_parse_reduces_once_and_loads_the_source_once(
 def test_parsed_model_carries_the_selected_unit_and_the_upstream_reduction(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
     import pyfmi_sysml.reduction as upstream
     from pyfmi_interfaces.core import Reduction
@@ -258,9 +258,9 @@ def test_parsed_model_carries_the_selected_unit_and_the_upstream_reduction(
 
 
 def test_single_parse_then_adapter_generation_never_reloads(tmp_path, monkeypatch):
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
-    import pycps_sysml2
+    import pycps_sysml
 
     source = tmp_path / "single.sysml"
     source.write_text(
@@ -275,13 +275,13 @@ def test_single_parse_then_adapter_generation_never_reloads(tmp_path, monkeypatc
     )
 
     calls = {"count": 0}
-    real_load = pycps_sysml2.load
+    real_load = pycps_sysml.load
 
     def counted(*args, **kwargs):
         calls["count"] += 1
         return real_load(*args, **kwargs)
 
-    monkeypatch.setattr(pycps_sysml2, "load", counted)
+    monkeypatch.setattr(pycps_sysml, "load", counted)
     parsed = sysml.parse(
         source, includes=[core_definitions()], name="OnlyModel", realtime=False
     )
@@ -290,7 +290,7 @@ def test_single_parse_then_adapter_generation_never_reloads(tmp_path, monkeypatc
     def failing(*args, **kwargs):
         raise AssertionError("generate_adapter reloaded the SysML source")
 
-    monkeypatch.setattr(pycps_sysml2, "load", failing)
+    monkeypatch.setattr(pycps_sysml, "load", failing)
     from pyfmi_sysml import generate_adapter
 
     target = generate_adapter(parsed, tmp_path / "adapter")
@@ -302,7 +302,7 @@ def test_single_parse_then_adapter_generation_never_reloads(tmp_path, monkeypatc
 
 
 def test_includes_merge_a_library_defined_fmu(tmp_path):
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
 
     library = tmp_path / "chain_library.sysml"

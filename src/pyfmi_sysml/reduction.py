@@ -3,7 +3,7 @@
 Every generator in ``pyfmi_interfaces`` consumes the parser-free result of this
 module, so that the modelDescription, the C headers, and the Modelica connectors
 cannot disagree about *which* variables exist. The reduction follows the
-``pyssp_sysml2`` v0.3.0 FMI policy:
+``pyssp_sysml`` v0.3.0 FMI policy:
 
 - parameters come from the parameter dialect only (``in port parameters ...``),
   never from flat part attributes, and keep their interface defaults;
@@ -41,7 +41,7 @@ from pyfmi_interfaces.core.model import (
 from pyfmi_interfaces.core.spelling import DISCRETE_TYPES, INPUT_START
 
 if TYPE_CHECKING:
-    from pycps_sysml2 import (
+    from pycps_sysml import (
         Architecture,
         Attribute,
         PartDefinition,
@@ -55,9 +55,9 @@ def _container_kinds() -> frozenset[object]:
 
     The enum lives in the dialect, so it is read on first use rather than at
     import time: a generator that only consumes a :class:`Reduction` never
-    imports ``pycps_sysml2``.
+    imports ``pycps_sysml``.
     """
-    from pycps_sysml2.parameters import AttributeKind
+    from pycps_sysml.parameters import AttributeKind
 
     return frozenset(
         {
@@ -86,7 +86,7 @@ def architecture(
     architecture imports them, the same policy as
     :func:`pyfmi_sysml.load_architecture`.
     """
-    from pycps_sysml2 import Architecture, load
+    from pycps_sysml import Architecture, load
 
     from pyfmi_sysml.definitions import load_with_definitions
 
@@ -105,7 +105,7 @@ def _start_text(type_name: str, value: object | None) -> str | None:
     """The formatted ``start`` text, or ``None`` when no default was authored."""
     if value is None:
         return None
-    from pycps_sysml2.core import format_value
+    from pycps_sysml.core import format_value
 
     return format_value(type_name, value)
 
@@ -143,7 +143,7 @@ def _fixed_count(multiplicity: str | None, value: object) -> int | None:
 
 
 def _field_dtype(attribute: Attribute) -> str:
-    from pycps_sysml2.core import map_fmi_type
+    from pycps_sysml.core import map_fmi_type
 
     return map_fmi_type(attribute.primitive_type_str())
 
@@ -154,7 +154,7 @@ def _is_signal_port(
     """True for a port that carries FMI signal fields, not parameters."""
     if definition is None:
         return False
-    from pycps_sysml2.parameters import is_parameter_interface
+    from pycps_sysml.parameters import is_parameter_interface
 
     return not is_parameter_interface(architecture, definition)
 
@@ -164,7 +164,7 @@ def _is_scalar_port(
 ) -> bool:
     """True for a port that names one FMI variable rather than a group.
 
-    Same predicate as ``pyssp_sysml2``: the loader normalizes a connector
+    Same predicate as ``pyssp_sysml``: the loader normalizes a connector
     without a dot to a port with one member named ``value``, and the SSP
     exporter names that connector after the port. An array-valued ``value`` is
     deliberately not scalar: FMI expands it into ``<port>.value[<index>]``
@@ -172,7 +172,7 @@ def _is_scalar_port(
     that shape instead of flattening it). Inherited members count, so a derived
     port definition that only adds fields is still not scalar.
     """
-    from pycps_sysml2 import effective_members
+    from pycps_sysml import effective_members
 
     members = effective_members(architecture, definition).attributes
     if tuple(members) != ("value",):
@@ -192,8 +192,8 @@ def component_interface(
     ``base_index`` shifts the ``[i]`` suffixes of every array member; the
     default 0 keeps the FMI convention, 1 targets OMC-built Modelica FMUs.
     """
-    from pycps_sysml2 import effective_members
-    from pycps_sysml2.parameters import (
+    from pycps_sysml import effective_members
+    from pycps_sysml.parameters import (
         SSP_POLICY,
         classify_attribute,
         parameter_declarations,
@@ -324,7 +324,7 @@ def export_identity(
     architecture: Architecture, system: PartDefinition
 ) -> ExportIdentity:
     """The naming rule for the export unit ``resolve_system`` selected."""
-    from pycps_sysml2.metadata.roles import is_fmu_model
+    from pycps_sysml.metadata.roles import is_fmu_model
 
     return ExportIdentity(system.name, is_fmu_model(architecture, system))
 
@@ -372,8 +372,8 @@ def _fmu_leaves(
 
 def _fmu_candidates(architecture: Architecture) -> list[PartDefinition]:
     """Every part definition marked ``:> FmuModel``, the marker excluded."""
-    from pycps_sysml2.metadata.helpers import short_name
-    from pycps_sysml2.metadata.roles import FMU_MODEL_MARKER, is_fmu_model
+    from pycps_sysml.metadata.helpers import short_name
+    from pycps_sysml.metadata.roles import FMU_MODEL_MARKER, is_fmu_model
 
     return [
         definition
@@ -415,8 +415,8 @@ def resolve_system(
     as a part elsewhere is taken; an architecture with several such roots must
     name one.
     """
-    from pycps_sysml2 import effective_members
-    from pycps_sysml2.metadata.roles import FMU_MODEL_MARKER
+    from pycps_sysml import effective_members
+    from pycps_sysml.metadata.roles import FMU_MODEL_MARKER
 
     if composition is not None:
         return architecture.get_part_def(composition)
@@ -464,7 +464,7 @@ def _component_definitions(
     """
     definitions: list[PartDefinition] = []
     seen: set[str] = set()
-    from pycps_sysml2 import effective_members
+    from pycps_sysml import effective_members
 
     def walk(
         part_def: PartDefinition,
@@ -498,7 +498,7 @@ def _experiment(
     architecture: Architecture, system: PartDefinition
 ) -> Experiment | None:
     """The composition's experiment container in FMI terms, or ``None``."""
-    from pycps_sysml2.metadata.roles import read_experiment
+    from pycps_sysml.metadata.roles import read_experiment
 
     experiment = read_experiment(architecture, system, required=False)
     if experiment is None:
@@ -523,7 +523,7 @@ def to_reduction(
     This is the only place that reads the SysML dialect. Every artifact
     generator calls it once and then works on the parser-free result, so a
     caller that already holds a :class:`Reduction` runs the generators without
-    ``pycps_sysml2`` being imported.
+    ``pycps_sysml`` being imported.
 
     ``includes`` are extra package roots merged into the load when ``source`` is
     a path; the root is loaded exactly once.  An already loaded architecture or
@@ -541,8 +541,8 @@ def to_reduction(
             )
         return source
 
-    from pycps_sysml2 import effective_members
-    from pycps_sysml2.parameters import SSP_POLICY, validate_parameter_dialect
+    from pycps_sysml import effective_members
+    from pycps_sysml.parameters import SSP_POLICY, validate_parameter_dialect
 
     parsed = architecture(source, includes=includes)
     system = resolve_system(parsed, composition)

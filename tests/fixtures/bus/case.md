@@ -25,7 +25,7 @@ scalar variables in value-reference order `0..19` — `actuation.*` (3),
 `orientation_in.*` (3), `position_in.*` (3), `shared.*` (3), `orientation_out.*`
 (3), `position_out.*` (3), `status.*` (2); every `shared.*` entry is an input and
 writable, every `*_out.*` and `status.*` entry is an output and read-only
-**Independent oracle**: `pycps_sysml2.load` parses the file, the FMI2 XSD and
+**Independent oracle**: `pycps_sysml.load` parses the file, the FMI2 XSD and
 semantic validator check the document, the C headers are compiled by
 `gcc -std=c11` and `g++ -std=c++17`, and the enum order is cross-checked against
 `Component.variables`

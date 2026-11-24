@@ -20,7 +20,7 @@ legal input at all if this case fails
 variables in value-reference order `0..2` — parameter `parameters.gain` (default
 `2.0`), input `u`, output `y`; one payload definition (`Signal`) used
 by both directions, so the Modelica connector must stay undirected
-**Independent oracle**: `pycps_sysml2.load` parses the file, and every golden
+**Independent oracle**: `pycps_sysml.load` parses the file, and every golden
 derived from it is compared byte-for-byte by `tests/golden_utils.py`
 **Comparison**: the goldens under `tests/golden/<subject>/minimal/` are the
 comparison, byte-for-byte

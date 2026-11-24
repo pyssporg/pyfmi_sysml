@@ -21,7 +21,7 @@ def test_interop_definitions_is_a_bundled_file():
 
 @pytest.mark.unit
 def test_interop_definitions_declares_the_shared_vocabulary():
-    pycps = pytest.importorskip("pycps_sysml2")
+    pycps = pytest.importorskip("pycps_sysml")
     # The interop vocabulary imports PysspCore privately, so the core root has
     # to resolve `SourcedMetadata` for the inherited-member view.
     architecture = pycps.load(interop_definitions(), pycps.core_definitions())
@@ -150,7 +150,7 @@ def test_fixtures_include_the_shipped_core_instead_of_redeclaring_it(
     subject: str,
 ) -> None:
     """One copy of the vocabulary: every fixture imports the package roots."""
-    pycps = pytest.importorskip("pycps_sysml2")
+    pycps = pytest.importorskip("pycps_sysml")
 
     includes = (
         [fixture_path("packages", "support")] if subject == "packages" else []

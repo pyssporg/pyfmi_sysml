@@ -25,7 +25,7 @@ from pyfmi_interfaces.modelica.package import DEFAULT_PACKAGE
 from pyfmi_sysml.reduction import to_reduction
 
 if TYPE_CHECKING:
-    from pycps_sysml2 import Architecture
+    from pycps_sysml import Architecture
 
     from pyfmi_interfaces import Reduction
 

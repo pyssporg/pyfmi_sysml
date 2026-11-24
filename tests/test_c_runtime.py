@@ -13,7 +13,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from pycps_sysml2 import load
+from pycps_sysml import load
 
 from conftest import GOLDEN_ROOT, fixture_path, update_goldens
 from golden_utils import assert_golden_text

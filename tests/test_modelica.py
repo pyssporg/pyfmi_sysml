@@ -6,7 +6,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-import pycps_sysml2
+import pycps_sysml
 import pytest
 
 from conftest import GOLDEN_ROOT, load_fixture
@@ -318,7 +318,7 @@ def test_a_parameter_keeps_its_authored_value_and_an_unbound_one_stays_open(
     )
 
     generate_modelica(
-        pycps_sysml2.load(architecture, pycps_sysml2.core_definitions()),
+        pycps_sysml.load(architecture, pycps_sysml.core_definitions()),
         tmp_path / "out",
     )
     text = (

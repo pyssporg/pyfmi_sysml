@@ -134,17 +134,17 @@ def test_to_reduction_accepts_includes_and_refuses_a_replay(tmp_path: Path) -> N
 
 def test_a_path_source_is_loaded_once(tmp_path: Path, monkeypatch) -> None:
     """Drift caught: a wrapper resolving the same path twice."""
-    import pycps_sysml2
+    import pycps_sysml
 
     app, library = _write_chain(tmp_path)
     calls = {"count": 0}
-    real_load = pycps_sysml2.load
+    real_load = pycps_sysml.load
 
     def counted(*args, **kwargs):
         calls["count"] += 1
         return real_load(*args, **kwargs)
 
-    monkeypatch.setattr(pycps_sysml2, "load", counted)
+    monkeypatch.setattr(pycps_sysml, "load", counted)
 
     generate_c_headers(
         app, tmp_path / "out", includes=[library, core_definitions()]

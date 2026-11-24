@@ -44,10 +44,10 @@ def fixture_path(subject: str, name: str) -> Path:
 
 def load_fixture(subject: str, *includes: Path):
     """Load a fixture with the shipped ``PysspCore`` root every model imports."""
-    import pycps_sysml2
+    import pycps_sysml
     from pyssp_sysml_definitions import core_definitions
 
-    return pycps_sysml2.load(
+    return pycps_sysml.load(
         fixture_path(subject, f"{subject}.sysml"), core_definitions(), *includes
     )
 

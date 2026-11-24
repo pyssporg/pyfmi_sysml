@@ -26,7 +26,7 @@ scalar variables in value-reference order `0..2` — parameters `parameters.gain
 `modelName` and `modelIdentifier` both `Generator`; guid
 `uuid5(NAMESPACE_URL, "pyssp_sysml2/Generator")`; C header files
 `Generator_InterfaceCommon.h` and `Generator.h`
-**Independent oracle**: `pycps_sysml2.load` parses the file, the FMI2 XSD and
+**Independent oracle**: `pycps_sysml.load` parses the file, the FMI2 XSD and
 semantic validator check the document, and the C headers are compiled by
 `gcc -std=c11` and `g++ -std=c++17`
 **Comparison**: byte-for-byte against the goldens under

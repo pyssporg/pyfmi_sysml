@@ -13,7 +13,7 @@ authors = [
   { name = "pyssp contributors" }
 ]
 dependencies = [
-  "pycps-sysml2>=0.3.0",
+  "pycps-sysml>=0.3.0",
   "pyfmi-interfaces>=0.5.1",
   "pyfmi-interop>=0.5.0",
   "pyssp-sysml-definitions>=0.1.0",

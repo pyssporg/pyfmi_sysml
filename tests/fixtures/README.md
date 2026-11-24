@@ -18,7 +18,7 @@ mirror the names: `tests/golden/<artifact>/<subject>/`.
 A fixture that needs more than one load root puts the included package in a
 subdirectory that follows the same rule (`packages/support/support.sysml`):
 `packages.sysml` stays the primary root the convention points at, and the
-included root is one more directory passed to `pycps_sysml2.load`.
+included root is one more directory passed to `pycps_sysml.load`.
 
 | Subject | Purpose | Variables |
 | --- | --- | --- |

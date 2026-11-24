@@ -330,7 +330,7 @@ _SKIP = skip_reason()
 
 @pytest.fixture(scope="module")
 def source_model(tmp_path_factory):
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
     import pyfmi_sysml as sysml
 
@@ -604,7 +604,7 @@ def _build_psysml2(
 
 
 def _run_psysml2_exchange(tmp_path: Path, serialization: str) -> None:
-    pytest.importorskip("pycps_sysml2")
+    pytest.importorskip("pycps_sysml")
     pytest.importorskip("pyfmi_interfaces")
     import pyfmi_sysml as sysml
 

@@ -1,7 +1,7 @@
 """SysML ingestion and interop composition for the FMI interface generators.
 
 This composition package owns the only SysML reader: :func:`to_reduction`
-loads through ``pycps_sysml2`` once and produces the parser-free ``Reduction``
+loads through ``pycps_sysml`` once and produces the parser-free ``Reduction``
 that every ``pyfmi_interfaces`` emitter consumes. The source-taking generator
 wrappers, the interop adapter flow (``parse`` once, then ``generate_adapter``),
 and the ``pyfmi-sysml`` command line live here; FMI packaging stays in

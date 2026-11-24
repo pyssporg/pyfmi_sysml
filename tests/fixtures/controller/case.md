@@ -26,7 +26,7 @@ parameters `parameters.gains[0]` (`1.0`), `parameters.gains[1]` (`2.5`),
 `parameters.label` (`"nominal"`), input fields `command.manual`, `command.auto`,
 `command.mode`, and output fields `throttle.demand`, `throttle.enabled`,
 `status.code`
-**Independent oracle**: `pycps_sysml2.load` parses the file, the FMI2 XSD and
+**Independent oracle**: `pycps_sysml.load` parses the file, the FMI2 XSD and
 semantic validator check the document, and the C headers are compiled by
 `gcc -std=c11` and `g++ -std=c++17` — the second compile is what proves `auto`
 was escaped rather than emitted raw

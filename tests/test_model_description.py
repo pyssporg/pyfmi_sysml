@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import pycps_sysml2
+import pycps_sysml
 import pytest
 from pyssp_standard.standard.fmi2.codec import Fmi2ModelDescriptionXmlCodec
 from pyssp_standard.standard.fmi2.validation import Fmi2ModelDescriptionValidator
@@ -215,8 +215,8 @@ def _write_model(directory: Path, text: str) -> Path:
 
 def _load_model(directory: Path, text: str):
     """Load an inline model with the shipped core vocabulary as a root."""
-    return pycps_sysml2.load(
-        _write_model(directory, text), pycps_sysml2.core_definitions()
+    return pycps_sysml.load(
+        _write_model(directory, text), pycps_sysml.core_definitions()
     )
 
 
@@ -429,7 +429,7 @@ def test_base_index_one_renames_array_variables(tmp_path: Path) -> None:
 
 def test_base_index_threads_through_port_array_members(tmp_path: Path) -> None:
     """The base reaches port payload fields, not only parameters."""
-    architecture = pycps_sysml2.load(_write_model(tmp_path, ARRAY_PORT_MODEL))
+    architecture = pycps_sysml.load(_write_model(tmp_path, ARRAY_PORT_MODEL))
 
     [component] = components(architecture, base_index=1)
 
@@ -443,7 +443,7 @@ def test_base_index_threads_through_port_array_members(tmp_path: Path) -> None:
 
 def test_mixed_port_members_carry_their_own_causality(tmp_path: Path) -> None:
     """Member direction wins over the ``inout`` usage; an unmarked member is input."""
-    architecture = pycps_sysml2.load(_write_model(tmp_path, MIXED_MEMBER_MODEL))
+    architecture = pycps_sysml.load(_write_model(tmp_path, MIXED_MEMBER_MODEL))
 
     [component] = components(architecture, base_index=1)
 
@@ -703,7 +703,7 @@ CONJUGATED_MODEL = """package ConjugatedPorts {
 
 def test_conjugated_port_flips_member_causality(tmp_path: Path) -> None:
     """``~P`` flips input/output per member; both ends share one definition."""
-    architecture = pycps_sysml2.load(_write_model(tmp_path, CONJUGATED_MODEL))
+    architecture = pycps_sysml.load(_write_model(tmp_path, CONJUGATED_MODEL))
 
     by_name = {
         component.name: component

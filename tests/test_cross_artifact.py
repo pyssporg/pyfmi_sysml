@@ -24,7 +24,7 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 import pytest
-import pycps_sysml2
+import pycps_sysml
 from pyssp_standard import FMU
 from pyssp_standard.standard.fmi2.codec import Fmi2ModelDescriptionXmlCodec
 
@@ -383,7 +383,7 @@ def build_artifacts(directory: Path, subject: str) -> Artifacts:
     component = description.parent.name
 
     headers = generate_c_headers(source, directory / "headers")
-    package = pycps_sysml2.load(source).package_name
+    package = pycps_sysml.load(source).package_name
     stems = {f"{package}_{component}", component}
     matching = [path for path in headers if path.stem in stems]
     if len(matching) != 1:

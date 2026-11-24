@@ -18,7 +18,7 @@ reader and the source-taking command line.
 
 ## Install
 
-`pyfmi_sysml` requires Python 3.11 or newer and depends on `pycps-sysml2`,
+`pyfmi_sysml` requires Python 3.11 or newer and depends on `pycps-sysml`,
 `pyfmi-interfaces`, `pyfmi-interop`, and `pyssp-sysml-definitions`.
 
 ```bash

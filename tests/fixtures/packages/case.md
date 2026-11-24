@@ -29,7 +29,7 @@ variables `bias`, `u`, `y`; `modelName` is
 `PackagesComposition.Leaf`, `modelIdentifier` is `Leaf`, and every path and file
 name is bare: the modelDescription lands in `Leaf/` and the headers are
 `Packages_InterfaceCommon.h` and `Packages_Leaf.h`
-**Independent oracle**: `pycps_sysml2.load` parses both roots and the FMI 2
+**Independent oracle**: `pycps_sysml.load` parses both roots and the FMI 2
 validator checks the generated document; the expected names come from the
 naming rule in `pyfmi_sysml.reduction`, not from a stored file
 **Comparison**: `tests/test_package_roots.py` asserts the selected root, the

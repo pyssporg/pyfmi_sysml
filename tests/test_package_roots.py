@@ -1,6 +1,6 @@
 """Two-root load: an included definition with parts is not a composition root.
 
-``pycps_sysml2`` stores a definition of the primary package under its bare name
+``pycps_sysml`` stores a definition of the primary package under its bare name
 and a definition of any other package under ``"<package>::<name>"``. Root
 selection must compare stored keys on both sides; comparing a bare name against
 a stored key counts an included definition with parts as an extra root and
@@ -9,7 +9,7 @@ refuses the load as ambiguous.
 
 from __future__ import annotations
 
-import pycps_sysml2
+import pycps_sysml
 import pytest
 
 from conftest import GENERATION_TIME, fixture_path
@@ -28,7 +28,7 @@ INCLUDE = fixture_path("packages", "support")
 
 @pytest.fixture(name="architecture")
 def architecture_fixture():
-    return pycps_sysml2.load(PRIMARY, INCLUDE)
+    return pycps_sysml.load(PRIMARY, INCLUDE)
 
 
 def test_same_bare_name_coexists_across_packages(architecture):
