@@ -4,7 +4,7 @@ SysML ingestion for the FMI interface generators. Contributors read
 [`AGENTS.md`](AGENTS.md).
 
 `pyfmi_sysml` loads a SysML v2 architecture through
-[`pycps_sysml2`](https://github.com/pyssporg/pycps_sysml2), reduces it once to
+[`pycps_sysml`](https://github.com/pyssporg/pycps_sysml), reduces it once to
 the parser-free `Reduction` defined by `pyfmi_interfaces`, and calls that
 package's emitters. It also owns the interop adapter flow: `parse` extracts
 attribute values from the reduction and maps them to a `ModelSpec`, and
