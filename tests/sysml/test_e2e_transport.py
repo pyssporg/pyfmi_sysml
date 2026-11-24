@@ -496,6 +496,10 @@ def _run_exchange(model, tmp_path: Path, serialization: str) -> None:
             str(receiver_runner),
             "--ready-file",
             str(ready),
+            # The transport binds when Initialization Mode is left, so the
+            # ready marker (and the sender wait) must move with it; otherwise
+            # the sender transmits into an unbound socket.
+            "--ready-after-exit",
             "--await-before",
             str(sender_done),
             "--steps",
@@ -528,15 +532,21 @@ def _run_exchange(model, tmp_path: Path, serialization: str) -> None:
         sender_done.write_text("done\n", encoding="utf-8")
         _wait_for(phase1, receiver_process)
 
-        # A valid frame for this model id, but tagged with the wrong payload
-        # format: the receiver must reject it before decoding the payload.
+        # A valid frame for this model id, but tagged with the payload format
+        # the receiver does not use: the receiver must reject it on the header
+        # before decoding the payload.
+        poison_format = (
+            wire.PayloadFormat.PACKED
+            if serialization == "protobuf"
+            else wire.PayloadFormat.PROTOBUF
+        )
         poison = wire.encode(
             receiver_view,
             packed.encode(receiver_view),
             instance=99,
             sequence=1,
             timestamp_ns=0,
-            payload_format=wire.PayloadFormat.PROTOBUF,
+            payload_format=poison_format,
         )
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as poison_socket:
             for _ in range(5):
