@@ -13,10 +13,10 @@ authors = [
   { name = "pyssp contributors" }
 ]
 dependencies = [
-  "pycps-sysml>=0.3.0",
-  "pyfmi-interfaces>=0.5.1",
-  "pyfmi-interop>=0.5.0",
-  "pyssp-sysml-definitions>=0.1.0",
+  "pycps_sysml @ https://github.com/pyssporg/pycps_sysml/releases/download/v0.4.0/pycps_sysml-0.4.0-py3-none-any.whl",
+  "pyfmi-interfaces @ https://github.com/pyssporg/pyfmi_interfaces/releases/download/v0.5.3/pyfmi_interfaces-0.5.3-py3-none-any.whl",
+  "pyfmi-interop @ https://github.com/pyssporg/pyfmi_interop/releases/download/v0.7.0/pyfmi_interop-0.7.0-py3-none-linux_x86_64.whl",
+  "pyssp-sysml-definitions @ https://github.com/pyssporg/pyssp_sysml_definitions/releases/download/v0.1.0/pyssp_sysml_definitions-0.1.0-py3-none-any.whl",
 ]
 
 [project.optional-dependencies]

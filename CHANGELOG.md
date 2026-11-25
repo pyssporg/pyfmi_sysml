@@ -5,20 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Changed
-
-- `generate_adapter` uses interop's public `write_adapter_tree`; the private
-  adapter imports (`_select_component`, `_require_fmi_layer`, `_write`,
-  `_strip_default_experiment`) are gone.
-- Attribute semantics moved to `pyfmi_interop.core.attributes`; `parse` only
-  extracts plain values, and `DEFAULT_STEP_SIZE_S` / `DEFAULT_STRING_CAPACITY`
-  are re-exported from interop.
-- `load_with_interop` moved here from `pyssp_sysml_definitions`; the vocabulary
-  package now ships paths only.
-
-## [0.2.0] - 2026-11-22
+## [0.2.0] - 2026-11-24
 
 ### Added
 
@@ -35,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Generate the adapter from the interop core (`pyfmi_interop.core.adapter`);
   this package owns ingestion, not the wire plane.
+- `generate_adapter` now uses interop's public `write_adapter_tree`; the private
+  adapter imports (`_select_component`, `_require_fmi_layer`, `_write`,
+  `_strip_default_experiment`) are gone.
+- Attribute semantics moved to `pyfmi_interop.core.attributes`; `parse` only
+  extracts plain values, and `DEFAULT_STEP_SIZE_S` / `DEFAULT_STRING_CAPACITY`
+  are re-exported from interop.
+- `load_with_interop` moved here from `pyssp_sysml_definitions`; the vocabulary
+  package now ships paths only.
 - Depend on `pyfmi-interop` at runtime; `pyfmi_interop` is now SysML-free.
 
 ## [0.1.0] - 2026-11-22
